@@ -797,13 +797,12 @@ SupervisorInstall(){
 	# 检测java路径配置
 	javaPath=$(echo "\"\$PATH:$JAVA_HOME/bin\"")
 	echo "当前java路径：$javaPath"
-	if cat /etc/init.d/supervisord | grep $javaPath  >/dev/null
+	if cat /etc/init.d/supervisord | grep $javaPath >/dev/null
 		then
 		let count+=1
 		echo -e "\033[32msupervisord 脚本JAVA路径配置正确\033[0m"
-		return
 	else
-	    echo "123456"|sudo -s sed -i '/export PATH=/d'  /etc/init.d/supervisord
+		echo "123456"|sudo -s sed -i '/export PATH=/d'  /etc/init.d/supervisord
 	    echo "123456"|sudo -s sed -i '3a export PATH='$(echo $javaPath)'' /etc/init.d/supervisord
 	    if [ $? -eq 0 ]; then
 			let count+=1
