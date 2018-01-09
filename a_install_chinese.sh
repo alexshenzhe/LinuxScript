@@ -923,6 +923,7 @@ MySQLInstall(){
 		echo "123456"|sudo -s sed -i '$acharacter_set_server=utf8' /home/yuantiaotech/my.cnf
 		echo "123456"|sudo -s sed -i '$a# Disabling symbolic-links is recommended to prevent assorted security risks' /home/yuantiaotech/my.cnf
 		echo "123456"|sudo -s sed -i '$asymbolic-links=0' /home/yuantiaotech/my.cnf
+		echo "123456"|sudo -s sed -i '$askip-name-resolve' /home/yuantiaotech/my.cnf
 		echo "123456"|sudo -s sed -i '$a[mysqld_safe]' /home/yuantiaotech/my.cnf
 		echo "123456"|sudo -s sed -i '$alog-error=/var/log/mysqld.log' /home/yuantiaotech/my.cnf
 		echo "123456"|sudo -s sed -i '$apid-file=/var/run/mysqld/mysqld.pid' /home/yuantiaotech/my.cnf
