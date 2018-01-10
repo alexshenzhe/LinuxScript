@@ -4,14 +4,15 @@
 # 作    者 : 沈喆
 # 版    本 : 1.1
 # 更新时间 : 2017/12/13
-# 描    述 : 这个自动化脚本用于部署过程中安装JDK、Supermap、Supervisor、MySQL、Tomcat、dataserver、toolsDownload等，
-#            脚本默认会配置tomcat的默认内存(512~1024m)及报表，新增加了创建或删除linux用户，根据提示操作即可。
+# 描    述 : 这个脚本用于部署过程中安装JDK、Supermap、Supervisor、MySQL、Oracle、Tomcat、dataserver、toolsDownload，后续增不增加就看我心情了。
+#            脚本默认会配置tomcat的默认内存(512~1024m)及报表，新增加了创建或删除linux用户以及关闭防火墙及SELINUX，根据提示操作即可。
 # 依 赖 包 : JDK        : jdk-7u80-linux-x64.tar.gz
-#            Supervisor : supervisor-3.3.1.tar.gz\meld3-1.0.2.tar.gz\supervisord
+#            Supervisor : supervisor-3.3.1.tar.gz \ meld3-1.0.2.tar.gz \ supervisord
 #			 MySQL      : MySQL-5.6.36-1.el6.x86_64.rpm-bundle.tar
 #            Tomcat     : apache-tomcat-7.0.63.tar.gz
 #            Supermap   : supermap_iserver_7.1.2_linux64.tar.gz
-#			 Oracle     : linux.x64_11gR2_database_1of2.zip\linux.x64_11gR2_database_2of2.zip\centos6.8_oracle11grpm.tar.gz
+#			 Oracle     : linux.x64_11gR2_database_1of2.zip \ linux.x64_11gR2_database_2of2.zip \ centos6.8_oracle11grpm.tar.gz
+#			 以上安装包可以从150服务器的/项目部文档/技术支持/部署常用软件/脚本/a_install文件夹下获取
 
 # 系统变量
 system_name=0 # 系统名称 例如 index/monitor/guide/...
@@ -28,11 +29,11 @@ port_add=0 # tomcat 端口增加量
 tomcat_package=apache-tomcat-7.0.63 # tomcat 安装包名
 dataserver_package=datamonitorserver # dataserver 安装包名
 user_name=yuantiaotech # 需要创建的用户名
-install_name=0 # 记录安装什么
 system_version=0 # 操作系统版本
 
+# tomcat 安装
 tomcatInstall(){
-	# 检查路径
+	# 检查安装路径
 	if [ ! -d $install_path ]; then
 	    mkdir $install_path
 	    echo -e "\033[32m$install_path 路径创建成功\033[0m"
@@ -40,6 +41,7 @@ tomcatInstall(){
 	    echo -e "\033[32m$install_path 路径已经存在\033[0m"
 	fi
 
+	# 检查压缩包是否解压
 	if [ ! -d /tmp/$tomcat_package ]; then
 		if [ ! -f /tmp/$tomcat_package.tar.gz ]; then
 			echo -e "\033[31m错误：$tomcat_package.tar.gz压缩包不存在，先将压缩包拷贝至/tmp路径下！\033[0m"
@@ -170,6 +172,7 @@ tomcatInstall(){
 	fi
 }
 
+# toolsDownload安装
 toolsDownloadInstall(){
 	if [ ! -d /tmp/toolsDownload ]; then
 		echo -e "\033[31m错误：toolsDownload文件夹不存在，先将文件夹拷贝至/tmp路径下！\033[0m"
@@ -188,6 +191,7 @@ toolsDownloadInstall(){
 	fi
 }
 
+# geoserver安装
 geoserverInstall(){
 	if [ "$system_name" == "geoMap" ]; then
 		#拷贝 geoserver.war 到 tomcat
@@ -214,6 +218,7 @@ geoserverInstall(){
 	fi
 }
 
+# 超图安装
 supermapInstall(){
 	# 用于计数，判断安装是否成功
 	count=0
@@ -278,6 +283,7 @@ supermapInstall(){
 	sh $supermap_path/bin/startup.sh
 }
 
+# 安装路径选择列表
 installPathSelect(){
 	echo -e "\033[32m┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\033[0m"
 	echo -e "\033[32m┠┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈ 选择安装路径 ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┨\033[0m"
@@ -285,7 +291,7 @@ installPathSelect(){
 	echo -e "\033[32m┃ [1]/home/yuantiaotech/project/$system_name  \033[0m"
 	echo -e "\033[32m┃ [2]/home/yuantiaotech                      ┃\033[0m"
 	echo -e "\033[32m┃ [3]当前脚本路径：$script_path			   \033[0m"
-	echo -e "\033[32m┃ [b]返回主菜单                  [q]退出安装 ┃\033[0m"
+	echo -e "\033[32m┃ [B]返回主菜单                  [Q]退出安装 ┃\033[0m"
 	echo -e "\033[32m┃                                            ┃\033[0m"	
 	echo -e "\033[32m┃ *支持直接输入                              ┃\033[0m"
 	echo -e "\033[32m┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\033[0m"
@@ -298,15 +304,16 @@ installPathSelect(){
 		;; 
 		3)  install_path=$script_path
 		;;
-		b)	allInstallMenu
+		B|b)  allInstallMenu
 		;;
-		q)  exit 0
+		Q|q)  exit 0
 		;;
 		*)	install_path=$val
 		;;
 	esac
 }
 
+# 端口变化
 portChange(){
 	shutdow_port=$(($port_add+8005))
 	http_port=$(($port_add+8081))
@@ -314,6 +321,7 @@ portChange(){
 	ajp_port=$(($port_add+8009))
 }
 
+# tomcat名称选择
 tomcatInstallSelect(){
 	echo -e "\033[32m┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\033[0m"
 	echo -e "\033[32m┠┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈ TOMCAT 安装 ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┨\033[0m"
@@ -322,7 +330,7 @@ tomcatInstallSelect(){
 	echo -e "\033[32m┃ [3]guide                   [4]flowanalysis ┃\033[0m"
 	echo -e "\033[32m┃ [5]toolsDownload           [6]SuperMap     ┃\033[0m"
 	echo -e "\033[32m┃ [7]GeoLayer                [8]GeoMap       ┃\033[0m"
-	echo -e "\033[32m┃ [b]返回主菜单              [q]退出安装     ┃\033[0m"
+	echo -e "\033[32m┃ [B]返回主菜单              [Q]退出安装     ┃\033[0m"
 	echo -e "\033[32m┃                                            ┃\033[0m"	
 	echo -e "\033[32m┃ *支持直接输入                              ┃\033[0m"
 	echo -e "\033[32m┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\033[0m"
@@ -358,7 +366,6 @@ tomcatInstallSelect(){
 			portChange
 			installPathSelect
 			tomcatInstall
-			#toolsDownloadInstall
 		;;
 		6)  system_name=SuperMap
 			installPathSelect
@@ -369,18 +376,16 @@ tomcatInstallSelect(){
 			portChange
 			installPathSelect
 			tomcatInstall
-			#geoserverInstall
 		;;
 		8)  system_name=geoMap
 			port_add=18
 			portChange
 			installPathSelect
 			tomcatInstall
-			#geoserverInstall
 		;;
-		b)	allInstallMenu
+		B|b)  allInstallMenu
 		;;
-		q)  exit 0
+		Q|q)  exit 0
 		;;
 		*)	system_name=$val
 			read -p "请输入 Shutdow 端口(默认:8005):" val2
@@ -397,6 +402,7 @@ tomcatInstallSelect(){
 	esac
 }
 
+# dataserver安装
 dataserverInstall(){
 	# 检查路径
 	if [ ! -d $install_path ]; then
@@ -465,13 +471,14 @@ dataserverInstall(){
 	fi
 }
 
+# dataserver名称选择
 dataserverInstallSelect(){
 	echo -e "\033[32m┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\033[0m"
 	echo -e "\033[32m┠┈┈┈┈┈┈┈┈┈┈┈┈┈┈ DATASERVER 安装 ┈┈┈┈┈┈┈┈┈┈┈┈┈┨\033[0m"
 	echo -e "\033[32m┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫\033[0m"
 	echo -e "\033[32m┃ [1]index                       [2]monitor  ┃\033[0m"
 	echo -e "\033[32m┃ [3]guide                                   ┃\033[0m"
-	echo -e "\033[32m┃ [b]返回主菜单                  [q]退出安装 ┃\033[0m"
+	echo -e "\033[32m┃ [B]返回主菜单                  [Q]退出安装 ┃\033[0m"
 	echo -e "\033[32m┃                                            ┃\033[0m"	
 	echo -e "\033[32m┃ *支持直接输入                              ┃\033[0m"
 	echo -e "\033[32m┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\033[0m"
@@ -496,9 +503,9 @@ dataserverInstallSelect(){
 			installPathSelect
 			dataserverInstall
 		;;
-		b)	allInstallMenu
+		B|b)  allInstallMenu
 		;; 
-		q)  exit 0
+		Q|q)  exit 0
 		;;
 		*)	system_name=$val
 			read -p "请输入数据库名称:" val2
@@ -511,6 +518,33 @@ dataserverInstallSelect(){
 	esac
 }
 
+UserSelect(){
+	echo -e "\033[32m┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\033[0m"
+	echo -e "\033[32m┠┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈ 创建/删除用户 ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┨\033[0m"
+	echo -e "\033[32m┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫\033[0m"
+	echo -e "\033[32m┃ [1]创建用户                    [2]删除用户 ┃\033[0m"
+	echo -e "\033[32m┃ [B]返回主菜单                  [Q]退出安装 ┃\033[0m"
+	echo -e "\033[32m┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\033[0m"
+
+	read -p "请选择创建或者删除用户:" val
+	case $val in
+		1)	UserNameSelect
+			addUser
+		;;
+		2)	UserNameSelect
+			deleteUser
+		;;
+		B|b)  allInstallMenu
+		;;
+		Q|q)  exit 0
+		;;
+		*)  echo -e "\033[31m输入有误\033[0m"
+			return
+		;;
+	esac
+}
+
+# 创建用户
 addUser(){
 	# 创建yuantiaotech用户，并添加sudo权限，默认密码123456
 	egrep "^$user_name" /etc/passwd >& /dev/null
@@ -534,6 +568,7 @@ addUser(){
 	fi
 }
 
+# 删除用户
 deleteUser(){
 	egrep "^$user_name" /etc/passwd >& /dev/null  
 	if [ $? -ne 0 ]  
@@ -563,12 +598,13 @@ deleteUser(){
 	fi 
 }
 
-UserSelect(){
+# 创建/删除用户名称选择
+UserNameSelect(){
 	echo -e "\033[32m┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\033[0m"
 	echo -e "\033[32m┠┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈ 选择用户名称 ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┨\033[0m"
 	echo -e "\033[32m┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫\033[0m"
 	echo -e "\033[32m┃ [1]yuantiaotech                            ┃\033[0m"
-	echo -e "\033[32m┃ [b]返回主菜单                  [q]退出安装 ┃\033[0m"
+	echo -e "\033[32m┃ [B]返回主菜单                  [Q]退出安装 ┃\033[0m"
 	echo -e "\033[32m┃                                            ┃\033[0m"	
 	echo -e "\033[32m┃ *支持直接输入                              ┃\033[0m"
 	echo -e "\033[32m┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\033[0m"
@@ -577,15 +613,16 @@ UserSelect(){
 	case $val in
 		1)	user_name=yuantiaotech
 		;;
-		b)	allInstallMenu
+		B|b)  allInstallMenu
 		;;
-		q)  exit 0
+		Q|q)  exit 0
 		;;
 		*)	user_name=$val
 		;;
 	esac
 }
 
+# JDK安装
 JDKInstall(){
 	# 检查amoy路径
 	checkInstallPath
@@ -682,12 +719,13 @@ JDKInstall(){
 	fi
 }
 
+# JDK安装对应操作系统选择
 JDKInstallSelect(){
 	echo -e "\033[32m┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\033[0m"
 	echo -e "\033[32m┠┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈ JDK 安装 ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┨\033[0m"
 	echo -e "\033[32m┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫\033[0m"
 	echo -e "\033[32m┃ [1]CentOS                      [2]Ubuntu   ┃\033[0m"
-	echo -e "\033[32m┃ [b]返回上级菜单                [q]退出安装 ┃\033[0m"
+	echo -e "\033[32m┃ [B]返回上级菜单                [Q]退出安装 ┃\033[0m"
 	echo -e "\033[32m┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\033[0m"
 
 	read -p "选择操作系统版本编号或直接输入:" val
@@ -698,13 +736,14 @@ JDKInstallSelect(){
 		2)	system_version=Ubuntu
 			JDKInstall
 		;;
-		b)	allInstallMenu
+		B|b)	allInstallMenu
 		;;
-		q)  exit 0
+		Q|q)  exit 0
 		;;
 	esac
 }
 
+# Supervisor安装
 SupervisorInstall(){
 	# 检查amoy路径
 	checkInstallPath
@@ -834,6 +873,7 @@ SupervisorInstall(){
 	fi
 }
 
+# MySQL安装
 MySQLInstall(){
 	# 检查旧版本
 	count=0
@@ -844,7 +884,7 @@ MySQLInstall(){
 	if [ ! -n "$oldMySQL" ]; then
 		echo -e "\033[32m旧版本 MySQL 已经卸载\033[0m"
 	else
-		echo -e "\033[31m开始卸载 MySQL\033[0m"
+		echo -e "\033[31m关闭MySQL...\033[0m"
 		# 关闭Mysql
 		echo "123456"|sudo -s su - root -c "service mysql stop"
 		sleep 3
@@ -919,11 +959,10 @@ MySQLInstall(){
 		echo "123456"|sudo -s sed -i '$asocket=/var/lib/mysql/mysql.sock' /home/yuantiaotech/my.cnf
 		echo "123456"|sudo -s sed -i '$auser=mysql' /home/yuantiaotech/my.cnf
 		echo "123456"|sudo -s sed -i '$alower_case_table_names=1' /home/yuantiaotech/my.cnf
-		echo "123456"|sudo -s sed -i '$a#default-character-set=utf8' /home/yuantiaotech/my.cnf
 		echo "123456"|sudo -s sed -i '$acharacter_set_server=utf8' /home/yuantiaotech/my.cnf
 		echo "123456"|sudo -s sed -i '$a# Disabling symbolic-links is recommended to prevent assorted security risks' /home/yuantiaotech/my.cnf
 		echo "123456"|sudo -s sed -i '$asymbolic-links=0' /home/yuantiaotech/my.cnf
-		echo "123456"|sudo -s sed -i '$askip-name-resolve' /home/yuantiaotech/my.cnf
+		#echo "123456"|sudo -s sed -i '$askip-name-resolve' /home/yuantiaotech/my.cnf
 		echo "123456"|sudo -s sed -i '$a[mysqld_safe]' /home/yuantiaotech/my.cnf
 		echo "123456"|sudo -s sed -i '$alog-error=/var/log/mysqld.log' /home/yuantiaotech/my.cnf
 		echo "123456"|sudo -s sed -i '$apid-file=/var/run/mysqld/mysqld.pid' /home/yuantiaotech/my.cnf
@@ -965,8 +1004,13 @@ MySQLInstall(){
 	fi
 
 	# 开启远程访问权限
-	mysql -uroot -p123456 -e "grant all privileges on *.* to 'root'@'%' identified by '123456' with grant option;"
-	mysql -uroot -p123456 -e "flush privileges;"
+	mysql -uroot -p123456 <<EOF
+	grant all privileges on *.* to 'root'@'%' identified by '123456' with grant option;
+	USE mysql;
+	UPDATE user SET Password=PASSWORD('123456') WHERE user='root';
+	UPDATE user SET password_expired='N';
+	FLUSH PRIVILEGES;
+EOF
 	if [ $? -eq 0 ]; then
 		echo -e "\033[32mMySQL 远程访问开启成功\033[0m"
 	else
@@ -974,6 +1018,36 @@ MySQLInstall(){
 	fi
 }
 
+OracleInstallSelect(){
+	echo -e "\033[32m┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\033[0m"
+	echo -e "\033[32m┠┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈ Oracle ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┨\033[0m"
+	echo -e "\033[32m┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫\033[0m"
+	echo -e "\033[32m┃ [1]Oracle安装                [2]Oracle配置 ┃\033[0m"
+	echo -e "\033[32m┃ [3]Oracle卸载                              ┃\033[0m"
+	echo -e "\033[32m┃ [B]返回主菜单                [Q]退出安装   ┃\033[0m"
+	echo -e "\033[32m┃                                            ┃\033[0m"
+	echo -e "\033[32m┃ *完整安装Oracle需先安装后配置              ┃\033[0m"
+	echo -e "\033[32m┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\033[0m"
+
+	read -p "请选择:" val
+	case $val in
+		1)	OracleInstall
+		;;
+		2)	OracleConfigure
+		;;
+		3)	OracleUninstall
+		;;
+		B|b)  allInstallMenu
+		;;
+		Q|q)  exit 0
+		;;
+		*)  echo -e "\033[31m输入有误\033[0m"
+			return
+		;;
+	esac
+}
+
+# Oracle安装
 OracleInstall(){
 	# 解压依赖包
 	if [ ! -d /tmp/centos6.8_oracle11gPackages ]; then
@@ -996,7 +1070,7 @@ OracleInstall(){
 	echo "123456"|sudo -s rpm -ivh /tmp/centos6.8_oracle11gPackages/part1/*.rpm --force --nodeps
 	echo "123456"|sudo -s rpm -ivh /tmp/centos6.8_oracle11gPackages/part2_xhost/*.rpm --force --nodeps
 
-	# 配置内核参数 /etc/sysctl.conf
+	# 配置内核参数及用户限制 /etc/sysctl.conf
 	if cat /etc/sysctl.conf | grep Oracle11gR2 >/dev/null
 		then
 		echo -e "\033[32m/etc/sysctl.conf 环境变量已经存在\033[0m"
@@ -1089,6 +1163,7 @@ OracleInstall(){
 
 	# 设置Linux版本
 	echo "123456"|sudo -s su - root -c "echo 'Red Hat Linux release 5' > /etc/redhat-release"
+
 	echo "123456"|sudo -s export LANG=en_US
 
 	# 创建并且配置/etc/init.d/oracle 开机启动脚本
@@ -1129,13 +1204,13 @@ OracleInstall(){
 		echo "123456"|sudo -s chmod 755 /etc/init.d/oracle
 
 		#设置文件软链接
-		echo "123456"|sudo -s  ln -s /etc/init.d/oracle /etc/rc.d/rc2.d/S99oracle
-		echo "123456"|sudo -s  ln -s /etc/init.d/oracle /etc/rc.d/rc3.d/S99oracle
-		echo "123456"|sudo -s  ln -s /etc/init.d/oracle /etc/rc.d/rc4.d/S99oracle
-		echo "123456"|sudo -s  ln -s /etc/init.d/oracle /etc/rc.d/rc5.d/S99oracle
-		echo "123456"|sudo -s  ln -s /etc/init.d/oracle /etc/rc.d/rc0.d/K01oracle
-		echo "123456"|sudo -s  ln -s /etc/init.d/oracle /etc/rc.d/rc1.d/K01oracle
-		echo "123456"|sudo -s  ln -s /etc/init.d/oracle /etc/rc.d/rc6.d/K01oracle
+		echo "123456"|sudo -s ln -s /etc/init.d/oracle /etc/rc.d/rc2.d/S99oracle
+		echo "123456"|sudo -s ln -s /etc/init.d/oracle /etc/rc.d/rc3.d/S99oracle
+		echo "123456"|sudo -s ln -s /etc/init.d/oracle /etc/rc.d/rc4.d/S99oracle
+		echo "123456"|sudo -s ln -s /etc/init.d/oracle /etc/rc.d/rc5.d/S99oracle
+		echo "123456"|sudo -s ln -s /etc/init.d/oracle /etc/rc.d/rc0.d/K01oracle
+		echo "123456"|sudo -s ln -s /etc/init.d/oracle /etc/rc.d/rc1.d/K01oracle
+		echo "123456"|sudo -s ln -s /etc/init.d/oracle /etc/rc.d/rc6.d/K01oracle
 		if [ $? -eq 0 ]; then
 			echo -e "\033[32m/etc/init.d/oracle 开机启动脚本创建成功\033[0m"
 		else
@@ -1164,7 +1239,7 @@ OracleInstall(){
 	else
 		echo -e "\033[32mOracle 安装包已经解压\033[0m"
 	fi
-	# 图形程序显示到桌面上 DISPLAY设置
+	# 图形程序显示到桌面上DISPLAY设置
 	IP_xhost=0
 	read -p "输入笔记本IP地址(例如192.168.0.111):" val
 	case $val in
@@ -1186,7 +1261,11 @@ OracleInstall(){
     fi
 }
 
+# Oracle配置
 OracleConfigure(){
+	# 还原系统版本信息
+	echo "123456"|sudo -s su - root -c "echo 'CentOS release 6.8 (Final)' > /etc/redhat-release"
+
 	if cat /etc/oratab | grep dbhome_1:Y >/dev/null
 		then
 		echo -e "\033[32m/etc/oratab 已经配置\033[0m"
@@ -1202,6 +1281,7 @@ OracleConfigure(){
 		fi
 	fi
 
+	echo -e "\033[32m正在配置...请等待...\033[0m"
 	# 创建amoy用户及配置
 sqlplus /nolog <<EOF
 		connect / as sysdba;
@@ -1228,6 +1308,142 @@ EOF
 	fi
 }
 
+# Oracle卸载确认
+OracleUninstallSelect(){
+	read -p "正在删除Oracle，是否确定[Y/N]:" val
+	case $val in
+		Y|y)  OracleUninstall
+		;;
+		N|n)  allInstallMenu
+		;;
+		*)	echo -e "\033[31m输入有误\033[0m"
+			return
+		;;
+	esac
+}
+
+# Oracle卸载
+OracleUninstall(){
+	# 关闭Oracle
+	if [ -f /opt/app/oracle/product/11.2.0/dbhome_1/bin/sqlplus ]; then
+		echo -e "\033[32m关闭Oracle...\033[0m"
+		sqlplus /nolog <<EOF
+			connect / as sysdba;
+			shutdown immediate;
+			exit
+EOF
+	fi
+
+	# 关闭Oralce监听
+	if [ -f /opt/app/oracle/product/11.2.0/dbhome_1/bin/lsnrctl ]; then	
+		echo "123456"|sudo -s su - root -c "lsnrctl stop"
+	fi
+	echo -e "\033[32m开始卸载Oracle\033[0m"
+	count=0
+	# 删除安装路径
+	echo "123456"|sudo -s su - root -c "rm -rf /opt/app"
+	echo "123456"|sudo -s su - root -c "rm -rf /opt/ORCLfmap"
+	if [ $? -eq 0 ]; then
+		let count+=1
+		echo -e "\033[32mOracle 安装路径删除成功\033[0m"
+	else
+		echo -e "\033[31mOracle 安装路径删除失败\033[0m"
+	fi
+
+	# 删除/usr/local/bin下三个文件夹
+	echo "123456"|sudo -s su - root -c "rm -rf /usr/local/bin/dbhome"
+	echo "123456"|sudo -s su - root -c "rm -rf /usr/local/bin/oraenv"
+	echo "123456"|sudo -s su - root -c "rm -rf /usr/local/bin/coraenv"
+	if [ $? -eq 0 ]; then
+		echo -e "\033[32m/usr/local/bin 下配置文件夹删除成功\033[0m"
+		let count+=1
+	else
+		echo -e "\033[31m/usr/local/bin 下配置文件夹删除失败\033[0m"
+	fi
+
+	# 删除/etc下文件
+	echo "123456"|sudo -s su - root -c "rm -f /etc/oratab"
+	echo "123456"|sudo -s su - root -c "rm -f /etc/oraInst.loc"
+	if [ $? -eq 0 ]; then
+		echo -e "\033[32m/etc/ 下配置文件夹删除成功\033[0m"
+		let count+=1
+	else
+		echo -e "\033[31m/etc/ 下配置文件夹删除失败\033[0m"
+	fi
+
+	# 删除配置
+	if cat /etc/sysctl.conf | grep Oracle11gR2 >/dev/null
+		then
+		echo "123456"|sudo -s sed -i '/Oracle11gR2/d' /etc/sysctl.conf
+		echo "123456"|sudo -s sed -i '/fs.aio-max-nr/d' /etc/sysctl.conf
+		echo "123456"|sudo -s sed -i '/fs.file-max/d' /etc/sysctl.conf
+		echo "123456"|sudo -s sed -i '/kernel.shmall/d' /etc/sysctl.conf
+		echo "123456"|sudo -s sed -i '/kernel.shmmni/d' /etc/sysctl.conf
+		echo "123456"|sudo -s sed -i '/kernel.sem/d' /etc/sysctl.conf
+		echo "123456"|sudo -s sed -i '/kernel.shmmax/d' /etc/sysctl.conf
+		echo "123456"|sudo -s sed -i '/net.ipv4.ip_local_port_range/d' /etc/sysctl.conf
+		echo "123456"|sudo -s sed -i '/net.core.rmem_default/d' /etc/sysctl.conf
+		echo "123456"|sudo -s sed -i '/net.core.rmem_max/d' /etc/sysctl.conf
+		echo "123456"|sudo -s sed -i '/net.core.wmem_default/d' /etc/sysctl.conf
+		echo "123456"|sudo -s sed -i '/net.core.wmem_max/d' /etc/sysctl.conf
+		echo -e "\033[32m/etc/sysctl.conf 中Oracle配置删除成功\033[0m"
+	else
+		echo -e "\033[32m/etc/sysctl.conf 中Oracle配置不存在\033[0m"
+	fi
+
+	if cat /etc/security/limits.conf | grep Oracle11gR2 >/dev/null
+		then
+		echo "123456"|sudo -s sed -i '/Oracle11gR2/d' /etc/security/limits.conf
+		echo "123456"|sudo -s sed -i '/yuantiaotech soft nproc 2048/d' /etc/security/limits.conf
+		echo "123456"|sudo -s sed -i '/yuantiaotechhard nproc 16384/d' /etc/security/limits.conf
+		echo "123456"|sudo -s sed -i '/yuantiaotechsoft nofile 1024/d' /etc/security/limits.conf
+		echo "123456"|sudo -s sed -i '/yuantiaotechhard nofile 65536/d' /etc/security/limits.conf
+		echo "123456"|sudo -s sed -i '/yuantiaotechsoft stack 10240/d' /etc/security/limits.conf
+		echo -e "\033[32m/etc/security/limits.conf 中Oracle配置删除成功\033[0m"
+	else
+		echo -e "\033[32m/etc/security/limits.conf 中Oracle配置不存在\033[0m"
+	fi
+
+	if cat /etc/pam.d/su | grep Oracle11gR2 >/dev/null
+		then
+		echo "123456"|sudo -s sed -i '/Oracle11gR2/d' /etc/pam.d/su
+		echo "123456"|sudo -s sed -i '/session required pam_limits.so/d' /etc/pam.d/su
+		echo -e "\033[32m/etc/pam.d/su 中Oracle配置删除成功\033[0m"
+	else
+		echo -e "\033[32m/etc/pam.d/su 中Oracle配置不存在\033[0m"
+	fi
+
+	if cat /etc/pam.d/login | grep Oracle11gR2 >/dev/null
+		then
+		echo "123456"|sudo -s sed -i '/Oracle11gR2/d' /etc/pam.d/login
+		echo "123456"|sudo -s sed -i '/session required pam_limits.so/d' /etc/pam.d/login
+		echo -e "\033[32m/etc/pam.d/login 中Oracle配置删除成功\033[0m"
+	else
+		echo -e "\033[32m/etc/pam.d/login 中Oracle配置不存在\033[0m"
+	fi
+
+	if cat /etc/profile | grep Oracle11gR2 >/dev/null
+		then
+		echo "123456"|sudo -s sed -i '/Oracle11gR2/d' /etc/profile
+		echo "123456"|sudo -s sed -i '/export ORACLE_BASE/d' /etc/profile
+		echo "123456"|sudo -s sed -i '/export ORACLE_HOME/d' /etc/profile
+		echo "123456"|sudo -s sed -i '/export ORACLE_OWNER/d' /etc/profile
+		echo "123456"|sudo -s sed -i '/export ORACLE_SID/d' /etc/profile
+		echo "123456"|sudo -s sed -i '/export NLS_LANG=.AL32UTF8/d' /etc/profile
+		echo "123456"|sudo -s sed -i '/export PATH=\$PATH:\$ORACLE_HOME\/bin/d' /etc/profile
+		echo -e "\033[32m/etc/profile 中Oracle配置删除成功\033[0m"
+	else
+		echo -e "\033[32m/etc/profile 中Oracle配置不存在\033[0m"
+	fi
+
+	if [ "$count" == 3 ]; then
+		echo -e "\033[32mOracle --------------------------- [卸载成功]\033[0m"
+	elif [ "$count" != 3 ]; then
+		echo -e "\033[31mOracle --------------------------- [卸载失败]\033[0m"
+	fi
+}
+
+# 关闭防火墙
 closeFirewall(){
 	# 关闭防火墙
 	echo "123456"|sudo -s service iptables status
@@ -1267,6 +1483,7 @@ closeFirewall(){
 	fi
 }
 
+# 检查/home/yuantiaotech/amoy路径是否存在
 checkInstallPath(){
 	# 检查路径
 	if [ ! -d /home/yuantiaotech/amoy ]; then
@@ -1282,16 +1499,16 @@ checkInstallPath(){
 	fi
 }
 
+# 主菜单
 allInstallMenu(){
 	echo -e "\033[32m┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\033[0m"
 	echo -e "\033[32m┣━━━━━━━━━━━━━━━━━━ 主菜单 ━━━━━━━━━━━━━━━━━━┫\033[0m"
 	echo -e "\033[32m┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫\033[0m"
-	echo -e "\033[32m┃ [1]创建用户                 [2]删除用户    ┃\033[0m"
-	echo -e "\033[32m┃ [3]JDK                      [4]Supervisor  ┃\033[0m"
-	echo -e "\033[32m┃ [5]MySQL                    [6]Tomcat      ┃\033[0m"
-	echo -e "\033[32m┃ [7]Oracle安装               [8]Oracle配置  ┃\033[0m"
-	echo -e "\033[32m┃ [9]Dataserver               [10]关闭防火墙 ┃\033[0m"
-	echo -e "\033[32m┃ [q]退出安装                                ┃\033[0m"	
+	echo -e "\033[32m┃ [1]创建/删除用户             [2]JDK        ┃\033[0m"
+	echo -e "\033[32m┃ [3]Supervisor                [4]MySQL      ┃\033[0m"
+	echo -e "\033[32m┃ [5]Oracle                    [6]Tomcat     ┃\033[0m"
+	echo -e "\033[32m┃ [7]Dataserver                [8]关闭防火墙 ┃\033[0m"
+	echo -e "\033[32m┃ [Q]退出安装                                ┃\033[0m"	
 	echo -e "\033[32m┃                                            ┃\033[0m"	
 	echo -e "\033[32m┃ *请根据菜单提示选择相应编号                ┃\033[0m"
 	echo -e "\033[32m┃ *确保安装包已经放置在/tmp路径下            ┃\033[0m"
@@ -1299,35 +1516,23 @@ allInstallMenu(){
 
 	read -p "选择需要安装的软件编号:" val
 	case $val in
-		1)	install_name=addUser
-			UserSelect
-			addUser
+		1)	UserSelect
 		;;
-		2)	install_name=deleteUser
-			UserSelect
-			deleteUser
+		2)  JDKInstallSelect
 		;;
-		3)  install_name=JDK
-			JDKInstallSelect
+		3)	SupervisorInstall
 		;;
-		4)	install_name=supervisor
-			SupervisorInstall
+		4)	MySQLInstall
 		;;
-		5)	MySQLInstall
+		5)	OracleInstallSelect
 		;;
-		6)	install_name=tomcat
-			tomcatInstallSelect
+		6)	tomcatInstallSelect
  		;;
-		7)	OracleInstall
+		7)	dataserverInstallSelect
 		;;
-		8)	OracleConfigure
+		8)	closeFirewall
 		;;
-		9)	install_name=dataserver
-			dataserverInstallSelect
-		;;
-		10)	closeFirewall
-		;;
-		q)  exit 0
+		Q|q)  exit 0
 		;;
 		*)  echo -e "\033[31m输入有误\033[0m"
 		;;
