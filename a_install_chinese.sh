@@ -31,7 +31,7 @@ dataserver_package=datamonitorserver # dataserver 安装包名
 user_name=yuantiaotech # 需要创建的用户名
 system_version=0 # 操作系统版本
 
-# tomcat 安装
+#==================================================================== tomcat 安装 ====================================================================
 tomcatInstall(){
 	# 检查安装路径
 	if [ ! -d $install_path ]; then
@@ -172,7 +172,7 @@ tomcatInstall(){
 	fi
 }
 
-# toolsDownload安装
+#==================================================================== toolsDownload安装 ====================================================================
 toolsDownloadInstall(){
 	if [ ! -d /tmp/toolsDownload ]; then
 		echo -e "\033[31m错误：toolsDownload文件夹不存在，先将文件夹拷贝至/tmp路径下！\033[0m"
@@ -191,7 +191,7 @@ toolsDownloadInstall(){
 	fi
 }
 
-# geoserver安装
+#==================================================================== geoserver安装 ====================================================================
 geoserverInstall(){
 	if [ "$system_name" == "geoMap" ]; then
 		#拷贝 geoserver.war 到 tomcat
@@ -218,7 +218,7 @@ geoserverInstall(){
 	fi
 }
 
-# 超图安装
+#==================================================================== 超图安装 ====================================================================
 supermapInstall(){
 	# 用于计数，判断安装是否成功
 	count=0
@@ -283,7 +283,7 @@ supermapInstall(){
 	sh $supermap_path/bin/startup.sh
 }
 
-# 安装路径选择列表
+#==================================================================== 安装路径选择列表 ====================================================================
 installPathSelect(){
 	echo -e "\033[32m┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\033[0m"
 	echo -e "\033[32m┠┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈ 选择安装路径 ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┨\033[0m"
@@ -313,7 +313,7 @@ installPathSelect(){
 	esac
 }
 
-# 端口变化
+#==================================================================== 端口变化 ====================================================================
 portChange(){
 	shutdow_port=$(($port_add+8005))
 	http_port=$(($port_add+8081))
@@ -321,7 +321,7 @@ portChange(){
 	ajp_port=$(($port_add+8009))
 }
 
-# tomcat名称选择
+#==================================================================== tomcat名称选择 ====================================================================
 tomcatInstallSelect(){
 	echo -e "\033[32m┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\033[0m"
 	echo -e "\033[32m┠┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈ TOMCAT 安装 ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┨\033[0m"
@@ -402,7 +402,7 @@ tomcatInstallSelect(){
 	esac
 }
 
-# dataserver安装
+#==================================================================== dataserver安装 ====================================================================
 dataserverInstall(){
 	# 检查路径
 	if [ ! -d $install_path ]; then
@@ -471,7 +471,7 @@ dataserverInstall(){
 	fi
 }
 
-# dataserver名称选择
+#==================================================================== dataserver名称选择 ====================================================================
 dataserverInstallSelect(){
 	echo -e "\033[32m┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\033[0m"
 	echo -e "\033[32m┠┈┈┈┈┈┈┈┈┈┈┈┈┈┈ DATASERVER 安装 ┈┈┈┈┈┈┈┈┈┈┈┈┈┨\033[0m"
@@ -518,6 +518,7 @@ dataserverInstallSelect(){
 	esac
 }
 
+#==================================================================== 创建、删除用户选择 ==================================================================== 
 UserSelect(){
 	echo -e "\033[32m┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\033[0m"
 	echo -e "\033[32m┠┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈ 创建/删除用户 ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┨\033[0m"
@@ -544,7 +545,7 @@ UserSelect(){
 	esac
 }
 
-# 创建用户
+#==================================================================== 创建用户 ====================================================================
 addUser(){
 	# 创建yuantiaotech用户，并添加sudo权限，默认密码123456
 	egrep "^$user_name" /etc/passwd >& /dev/null
@@ -568,7 +569,7 @@ addUser(){
 	fi
 }
 
-# 删除用户
+#==================================================================== 删除用户 ====================================================================
 deleteUser(){
 	egrep "^$user_name" /etc/passwd >& /dev/null  
 	if [ $? -ne 0 ]  
@@ -598,7 +599,7 @@ deleteUser(){
 	fi 
 }
 
-# 创建/删除用户名称选择
+#==================================================================== 用户名称选择 ====================================================================
 UserNameSelect(){
 	echo -e "\033[32m┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\033[0m"
 	echo -e "\033[32m┠┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈ 选择用户名称 ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┨\033[0m"
@@ -622,7 +623,7 @@ UserNameSelect(){
 	esac
 }
 
-# JDK安装
+#==================================================================== JDK安装 ====================================================================
 JDKInstall(){
 	# 检查amoy路径
 	checkInstallPath
@@ -710,6 +711,12 @@ JDKInstall(){
 		echo -e "\033[31mJDK 环境变量配置失败\033[0m"
 	fi
 
+	# 添加JDK软链接，CDH安装时候需要
+	echo "123456"|sudo -s mkdir /usr/java
+	echo "123456"|sudo -s ln -s /home/yuantiaotech/amoy/jdk1.7.0_80/ /usr/java/
+	echo "123456"|sudo -s mv /usr/java/jdk1.7.0_80 /usr/java/jdk1.7
+	
+
 	if [ "$count" == 2 ]; then
 		echo -e "\033[32mJDK --------------------------- [安装成功]\033[0m"
 		echo -e "\033[32mJDK 版本信息：\033[0m"
@@ -719,7 +726,7 @@ JDKInstall(){
 	fi
 }
 
-# JDK安装对应操作系统选择
+#==================================================================== JDK安装对应操作系统选择 ====================================================================
 JDKInstallSelect(){
 	echo -e "\033[32m┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\033[0m"
 	echo -e "\033[32m┠┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈ JDK 安装 ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┨\033[0m"
@@ -743,7 +750,7 @@ JDKInstallSelect(){
 	esac
 }
 
-# Supervisor安装
+#==================================================================== Supervisor安装 ====================================================================
 SupervisorInstall(){
 	# 检查amoy路径
 	checkInstallPath
@@ -873,7 +880,7 @@ SupervisorInstall(){
 	fi
 }
 
-# MySQL安装
+#==================================================================== MySQL安装 ====================================================================
 MySQLInstall(){
 	# 检查旧版本
 	count=0
@@ -890,7 +897,7 @@ MySQLInstall(){
 		sleep 3
 		# 卸载旧版本Mysql
 		echo -e "\033[31m开始卸载旧版本...请稍等...\033[0m"
-		sleep 2
+		sleep 1
 		echo "123456"|sudo -s su - root -c "yum -y remove mysql-libs-5.1.73-7.el6.x86_64"
 		echo "123456"|sudo -s su - root -c "yum -y remove MySQL-server-5.6.36-1.el6.x86_64"
 		echo "123456"|sudo -s su - root -c "yum -y remove MySQL-client-5.6.36-1.el6.x86_64"
@@ -1018,6 +1025,7 @@ EOF
 	fi
 }
 
+#==================================================================== Oracle安装配置卸载选项 ====================================================================
 OracleInstallSelect(){
 	echo -e "\033[32m┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\033[0m"
 	echo -e "\033[32m┠┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈ Oracle ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┨\033[0m"
@@ -1047,8 +1055,13 @@ OracleInstallSelect(){
 	esac
 }
 
-# Oracle安装
+#==================================================================== Oracle安装 ====================================================================
 OracleInstall(){
+	# 卸载Oracle
+	if [ "$ORACLE_HOME" != "" ]; then
+		OracleUninstall
+	fi
+	
 	# 解压依赖包
 	if [ ! -d /tmp/centos6.8_oracle11gPackages ]; then
 		if [ ! -f /tmp/centos6.8_oracle11gPackages.tar.gz ]; then
@@ -1261,11 +1274,8 @@ OracleInstall(){
     fi
 }
 
-# Oracle配置
+#==================================================================== Oracle配置 ====================================================================
 OracleConfigure(){
-	# 还原系统版本信息
-	echo "123456"|sudo -s su - root -c "echo 'CentOS release 6.8 (Final)' > /etc/redhat-release"
-
 	if cat /etc/oratab | grep dbhome_1:Y >/dev/null
 		then
 		echo -e "\033[32m/etc/oratab 已经配置\033[0m"
@@ -1283,22 +1293,25 @@ OracleConfigure(){
 
 	echo -e "\033[32m正在配置...请等待...\033[0m"
 	# 创建amoy用户及配置
-sqlplus /nolog <<EOF
-		connect / as sysdba;
-		create user amoy identified by 123456;
-		connect system as sysdba;
-		grant dba to amoy;
-		connect amoy/123456;
-		alter database add supplemental log data (all) columns;
-		connect / as sysdba;
-		alter system set sga_max_size=384m scope=spfile;
-		alter system set sga_target=384m scope=spfile;
-		alter system set pga_aggregate_target=96m;
-		alter system set PROCESSES=300 scope=spfile;
-		shutdown immediate;
-		startup;
-		exit
+	sqlplus /nolog <<EOF
+	connect / as sysdba;
+	create user amoy identified by 123456;
+	connect system as sysdba;
+	grant dba to amoy;
+	connect amoy/123456;
+	alter database add supplemental log data (all) columns;
+	connect / as sysdba;
+	alter system set sga_max_size=384m scope=spfile;
+	alter system set sga_target=384m scope=spfile;
+	alter system set pga_aggregate_target=96m;
+	alter system set PROCESSES=300 scope=spfile;
+	shutdown immediate;
+	startup;
+	exit
 EOF
+
+	# 还原系统版本信息
+	echo "123456"|sudo -s su - root -c "echo 'CentOS release 6.8 (Final)' > /etc/redhat-release"
 
 	if [ $? -eq 0 ]; then
 		echo -e "\033[32mOracle 配置成功\033[0m"
@@ -1308,7 +1321,7 @@ EOF
 	fi
 }
 
-# Oracle卸载确认
+#==================================================================== Oracle卸载确认 ====================================================================
 OracleUninstallSelect(){
 	read -p "正在删除Oracle，是否确定[Y/N]:" val
 	case $val in
@@ -1322,15 +1335,15 @@ OracleUninstallSelect(){
 	esac
 }
 
-# Oracle卸载
+#==================================================================== Oracle卸载 ====================================================================
 OracleUninstall(){
 	# 关闭Oracle
 	if [ -f /opt/app/oracle/product/11.2.0/dbhome_1/bin/sqlplus ]; then
 		echo -e "\033[32m关闭Oracle...\033[0m"
 		sqlplus /nolog <<EOF
-			connect / as sysdba;
-			shutdown immediate;
-			exit
+		connect / as sysdba;
+		shutdown immediate;
+		exit
 EOF
 	fi
 
@@ -1443,7 +1456,7 @@ EOF
 	fi
 }
 
-# 关闭防火墙
+#==================================================================== 关闭防火墙 ====================================================================
 closeFirewall(){
 	# 关闭防火墙
 	echo "123456"|sudo -s service iptables status
@@ -1461,7 +1474,7 @@ closeFirewall(){
 		if [ $? -eq 0 ]; then
 			echo -e "\033[32m永久关闭防火墙成功，重启后生效\033[0m"
 		else
-			echo -e "\033[31m永久关闭防火墙失败，重启后生效\033[0m"
+			echo -e "\033[31m永久关闭防火墙失败\033[0m"
 		fi
     else 
     	echo -e "\033[32m防火墙已经关闭\033[0m"
@@ -1483,7 +1496,7 @@ closeFirewall(){
 	fi
 }
 
-# 检查/home/yuantiaotech/amoy路径是否存在
+#==================================================================== 检查/home/yuantiaotech/amoy路径是否存在 ====================================================================
 checkInstallPath(){
 	# 检查路径
 	if [ ! -d /home/yuantiaotech/amoy ]; then
@@ -1499,7 +1512,7 @@ checkInstallPath(){
 	fi
 }
 
-# 主菜单
+#==================================================================== 主菜单 ====================================================================
 allInstallMenu(){
 	echo -e "\033[32m┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\033[0m"
 	echo -e "\033[32m┣━━━━━━━━━━━━━━━━━━ 主菜单 ━━━━━━━━━━━━━━━━━━┫\033[0m"
