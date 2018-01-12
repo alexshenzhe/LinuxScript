@@ -680,7 +680,7 @@ JDKInstall(){
 			echo "123456"|sudo -s sed -i '$aexport PATH=$PATH:$JAVA_HOME/bin' /home/yuantiaotech/.bashrc
 			# 生效配置
 			source /home/yuantiaotech/.bashrc
-			echo "123456"|sudo -s echo "JAVA_HOME=/home/yuantiaotech/amoy/jdk1.7.0_80" >> /etc/environment
+			echo "123456"|sudo -s su - root -c "echo "JAVA_HOME=/home/yuantiaotech/amoy/jdk1.7.0_80" >> /etc/environment"
 			source /etc/environment
 		fi
 	elif [ "$system_version" = "Ubuntu" ]; then
@@ -743,7 +743,7 @@ JDKInstallSelect(){
 		2)	system_version=Ubuntu
 			JDKInstall
 		;;
-		B|b)	allInstallMenu
+		B|b)  allInstallMenu
 		;;
 		Q|q)  exit 0
 		;;
@@ -1034,7 +1034,7 @@ OracleInstallSelect(){
 	echo -e "\033[32m┃ [3]Oracle卸载                              ┃\033[0m"
 	echo -e "\033[32m┃ [B]返回主菜单                [Q]退出安装   ┃\033[0m"
 	echo -e "\033[32m┃                                            ┃\033[0m"
-	echo -e "\033[32m┃ *完整安装Oracle需先安装后配置              ┃\033[0m"
+	echo -e "\033[32m┃ *完整安装Oracle需包含[1][2]两步            ┃\033[0m"
 	echo -e "\033[32m┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\033[0m"
 
 	read -p "请选择:" val
@@ -1548,6 +1548,7 @@ allInstallMenu(){
 		Q|q)  exit 0
 		;;
 		*)  echo -e "\033[31m输入有误\033[0m"
+			return
 		;;
 	esac
 }
