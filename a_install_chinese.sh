@@ -28,6 +28,7 @@ tomcat_path=0 # tomcat 路径
 port_add=0 # tomcat 端口增加量
 user_name=yuantiaotech # 需要创建的用户名
 system_version=0 # 操作系统版本
+all_package_path=/tmp # 安装包默认放置路径，所有安装包都会到这个路径下去读取
 
 #==================================================================== tomcat 安装 ====================================================================
 tomcatInstall(){
@@ -44,12 +45,12 @@ tomcatInstall(){
 	fi
 
 	# 检查压缩包是否解压
-	if [ ! -d /tmp/$tomcat_package ]; then
-		if [ ! -f /tmp/$tomcat_package.tar.gz ]; then
-			echo -e "\033[31m错误：$tomcat_package.tar.gz压缩包不存在，先将压缩包拷贝至/tmp路径下！\033[0m"
+	if [ ! -d $all_package_path/$tomcat_package ]; then
+		if [ ! -f $all_package_path/$tomcat_package.tar.gz ]; then
+			echo -e "\033[31m错误：$tomcat_package.tar.gz压缩包不存在，先将压缩包拷贝至$all_package_path路径下！\033[0m"
 			return
 		else
-			tar -zxvf /tmp/$tomcat_package.tar.gz -C /tmp
+			tar -zxvf $all_package_path/$tomcat_package.tar.gz -C $all_package_path
 			if [ $? -eq 0 ]; then
 				echo -e "\033[32m$tomcat_package.tar.gz 解压成功\033[0m"
 			else
@@ -63,7 +64,7 @@ tomcatInstall(){
 	fi
 
 	if [ ! -d $tomcat_path ]; then
-		cp -r /tmp/$tomcat_package $tomcat_path  # 拷贝并重命名
+		cp -r $all_package_path/$tomcat_package $tomcat_path  # 拷贝并重命名
 	else
 		echo -e "\033[32m$tomcat_path 已经存在\033[0m"
 	fi
@@ -174,14 +175,14 @@ tomcatInstall(){
 
 #==================================================================== toolsDownload安装 ====================================================================
 toolsDownloadInstall(){
-	if [ ! -d /tmp/toolsDownload ]; then
-		echo -e "\033[31m错误：toolsDownload文件夹不存在，先将文件夹拷贝至/tmp路径下！\033[0m"
+	if [ ! -d $all_package_path/toolsDownload ]; then
+		echo -e "\033[31m错误：toolsDownload文件夹不存在，先将文件夹拷贝至$all_package_path路径下！\033[0m"
 		return
 	else
 		#拷贝 web.xml&favicon.ico&toolsDownload 到 tomcat
-		cp /tmp/toolsDownload/web.xml $tomcat_path/conf/
-		cp /tmp/toolsDownload/favicon.ico $tomcat_path/webapps/ROOT/
-		cp -r /tmp/toolsDownload/toolsDownload $tomcat_path/webapps/
+		cp $all_package_path/toolsDownload/web.xml $tomcat_path/conf/
+		cp $all_package_path/toolsDownload/favicon.ico $tomcat_path/webapps/ROOT/
+		cp -r $all_package_path/toolsDownload/toolsDownload $tomcat_path/webapps/
 	fi
 
 	if [ $? -eq 0  ]; then
@@ -195,19 +196,19 @@ toolsDownloadInstall(){
 geoserverInstall(){
 	if [ "$system_name" == "geoMap" ]; then
 		#拷贝 geoserver.war 到 tomcat
-		if [ ! -f /tmp/geoserver.war ]; then
-			echo -e "\033[31m错误：geoserver.war压缩包不存在，先将压缩包拷贝至/tmp路径下！\033[0m"
+		if [ ! -f $all_package_path/geoserver.war ]; then
+			echo -e "\033[31m错误：geoserver.war压缩包不存在，先将压缩包拷贝至$all_package_path路径下！\033[0m"
 			return
 		else
-			cp -r /tmp/geoserver.war $tomcat_path/webapps/
+			cp -r $all_package_path/geoserver.war $tomcat_path/webapps/
 		fi
 	elif [ "$system_name" == "geoLayer" ]; then
 		#拷贝 geoserver 到 tomcat
-		if [ ! -d /tmp/geoserver ]; then
-			echo -e "\033[31m错误：geoserver文件夹不存在，先将文件夹拷贝至/tmp路径下！\033[0m"
+		if [ ! -d $all_package_path/geoserver ]; then
+			echo -e "\033[31m错误：geoserver文件夹不存在，先将文件夹拷贝至$all_package_path路径下！\033[0m"
 			return
 		else
-			cp -r /tmp/geoserver $tomcat_path/webapps/
+			cp -r $all_package_path/geoserver $tomcat_path/webapps/
 		fi
 	fi
 
@@ -225,10 +226,10 @@ supermapInstall(){
 	supermap_path=$install_path/SuperMapiServer7C
 	if [ ! -d $supermap_path ]; then
 		if [ ! -f supermap_iserver_7.1.2_linux64.tar.gz ]; then
-			echo -e "\033[31m错误：supermap_iserver_7.1.2_linux64.tar.gz压缩包不存在，先将压缩包拷贝至/tmp路径下！\033[0m"
+			echo -e "\033[31m错误：supermap_iserver_7.1.2_linux64.tar.gz压缩包不存在，先将压缩包拷贝至$all_package_path路径下！\033[0m"
 			return
 		else
-			tar -zxvf /tmp/supermap_iserver_7.1.2_linux64.tar.gz -C $install_path
+			tar -zxvf $all_package_path/supermap_iserver_7.1.2_linux64.tar.gz -C $install_path
 			sleep 50
 			if [ $? -eq 0 ]; then
 				let count+=1
@@ -417,7 +418,7 @@ dataserverInstall(){
 	dataserver_path=$install_path/dataserver_$system_name
 	# 拷贝 dataserver 到安装路径
 	if [ ! -d $dataserver_path ]; then
-	    cp -r /tmp/$dataserver_package/ $dataserver_path
+	    cp -r $all_package_path/$dataserver_package/ $dataserver_path
 	else
 	    echo -e "\033[32m$install_path/$system_name 已经存在\033[0m"
 	    return
@@ -641,11 +642,11 @@ JDKInstall(){
 	# 用于计数，判断安装是否成功
 	count=0
 	if [ ! -d $JDKPath ]; then
-		if [ ! -f /tmp/$JDKPackageName ]; then
-			echo -e "\033[31m错误：$JDKPackageName 压缩包不存在，先将压缩包拷贝至/tmp路径下！\033[0m"
+		if [ ! -f $all_package_path/$JDKPackageName ]; then
+			echo -e "\033[31m错误：$JDKPackageName 压缩包不存在，先将压缩包拷贝至$all_package_path路径下！\033[0m"
 			return
 		else
-			tar -zxvf /tmp/$JDKPackageName -C $JDKInstallPath
+			tar -zxvf $all_package_path/$JDKPackageName -C $JDKInstallPath
 			sleep 3
 			if [ $? -eq 0 ]; then
 				let count+=1
@@ -725,7 +726,9 @@ JDKInstall(){
 	fi
 
 	# 添加JDK软链接，CDH安装时候需要
-	echo "123456"|sudo -s mkdir /usr/java
+	if [ ! -d /usr/java ]; then
+		echo "123456"|sudo -s mkdir /usr/java
+	fi
 	echo "123456"|sudo -s ln -s $JDKPath/ /usr/java/
 	echo "123456"|sudo -s mv /usr/java/$JDKFileName /usr/java/jdk1.7
 
@@ -789,11 +792,11 @@ SupervisorInstall(){
 	count=0
 	# 解压
 	if [ ! -d $installPath/$meldFileName ]; then
-		if [ ! -f /tmp/$meldPackageName ]; then
-			echo -e "\033[31m错误：$meldPackageName压缩包不存在，先将压缩包拷贝至/tmp路径下！\033[0m"
+		if [ ! -f $all_package_path/$meldPackageName ]; then
+			echo -e "\033[31m错误：$meldPackageName压缩包不存在，先将压缩包拷贝至$all_package_path路径下！\033[0m"
 			return
 		else
-			tar -zxvf /tmp/$meldPackageName -C $installPath
+			tar -zxvf $all_package_path/$meldPackageName -C $installPath
 			if [ $? -eq 0 ]; then
 				let count+=1
 				echo -e "\033[32m$meldPackageName 解压成功\033[0m"
@@ -809,11 +812,11 @@ SupervisorInstall(){
 	fi
 
 	if [ ! -d $installPath/$supervisorFileName ]; then
-		if [ ! -f /tmp/$supervisorPackageName ]; then
-			echo -e "\033[31m错误：$supervisorPackageName压缩包不存在，先将压缩包拷贝至/tmp路径下！\033[0m"
+		if [ ! -f $all_package_path/$supervisorPackageName ]; then
+			echo -e "\033[31m错误：$supervisorPackageName压缩包不存在，先将压缩包拷贝至$all_package_path路径下！\033[0m"
 			return
 		else
-			tar -zxvf /tmp/$supervisorPackageName -C $installPath
+			tar -zxvf $all_package_path/$supervisorPackageName -C $installPath
 			if [ $? -eq 0 ]; then
 				let count+=1
 				echo -e "\033[32m$supervisorPackageName 解压成功\033[0m"
@@ -862,7 +865,7 @@ SupervisorInstall(){
 	echo "123456"|sudo -s sed -i '$afiles = /etc/supervisor/conf.d/*.conf' /etc/supervisor/supervisord.conf
 
 	# 拷贝启动脚本到/etc/init.d/
-	echo "123456"|sudo -s cp /tmp/supervisord /etc/init.d/
+	echo "123456"|sudo -s cp $all_package_path/supervisord /etc/init.d/
 	# 检测java路径配置
 	javaPath=$(echo "\"\$PATH:$JAVA_HOME/bin\"")
 	echo "当前java路径：$javaPath"
@@ -951,12 +954,12 @@ MySQLInstall(){
 	fi
 
 	# 解压
-	if [ ! -d /tmp/MySQL-server-5.6.36-1.el6.x86_64.rpm ]; then
-		if [ ! -f /tmp/MySQL-5.6.36-1.el6.x86_64.rpm-bundle.tar ]; then
-			echo -e "\033[31m错误：MySQL-5.6.36-1.el6.x86_64.rpm-bundle.tar压缩包不存在，先将压缩包拷贝至/tmp路径下！\033[0m"
+	if [ ! -d $all_package_path/MySQL-server-5.6.36-1.el6.x86_64.rpm ]; then
+		if [ ! -f $all_package_path/MySQL-5.6.36-1.el6.x86_64.rpm-bundle.tar ]; then
+			echo -e "\033[31m错误：MySQL-5.6.36-1.el6.x86_64.rpm-bundle.tar压缩包不存在，先将压缩包拷贝至$all_package_path路径下！\033[0m"
 			return
 		else
-			tar xvf /tmp/MySQL-5.6.36-1.el6.x86_64.rpm-bundle.tar -C /tmp
+			tar xvf $all_package_path/MySQL-5.6.36-1.el6.x86_64.rpm-bundle.tar -C $all_package_path
 			if [ $? -eq 0 ]; then
 				let count+=1
 				echo -e "\033[32mMySQL-5.6.36-1.el6.x86_64.rpm-bundle.tar 解压成功\033[0m"
@@ -971,13 +974,13 @@ MySQLInstall(){
 	fi
 	echo -e "\033[32m开始安装 MySQL\033[0m"
 	sleep 1
-	echo "123456"|sudo -s rpm -ivh --nodeps --force /tmp/MySQL-client-5.6.36-1.el6.x86_64.rpm
-	echo "123456"|sudo -s rpm -ivh --nodeps --force /tmp/MySQL-devel-5.6.36-1.el6.x86_64.rpm
-	echo "123456"|sudo -s rpm -ivh --nodeps --force /tmp/MySQL-embedded-5.6.36-1.el6.x86_64.rpm
-	echo "123456"|sudo -s rpm -ivh --nodeps --force /tmp/MySQL-server-5.6.36-1.el6.x86_64.rpm
-	echo "123456"|sudo -s rpm -ivh --nodeps --force /tmp/MySQL-shared-5.6.36-1.el6.x86_64.rpm
-	echo "123456"|sudo -s rpm -ivh --nodeps --force /tmp/MySQL-shared-compat-5.6.36-1.el6.x86_64.rpm
-	echo "123456"|sudo -s rpm -ivh --nodeps --force /tmp/MySQL-test-5.6.36-1.el6.x86_64.rpm
+	echo "123456"|sudo -s rpm -ivh --nodeps --force $all_package_path/MySQL-client-5.6.36-1.el6.x86_64.rpm
+	echo "123456"|sudo -s rpm -ivh --nodeps --force $all_package_path/MySQL-devel-5.6.36-1.el6.x86_64.rpm
+	echo "123456"|sudo -s rpm -ivh --nodeps --force $all_package_path/MySQL-embedded-5.6.36-1.el6.x86_64.rpm
+	echo "123456"|sudo -s rpm -ivh --nodeps --force $all_package_path/MySQL-server-5.6.36-1.el6.x86_64.rpm
+	echo "123456"|sudo -s rpm -ivh --nodeps --force $all_package_path/MySQL-shared-5.6.36-1.el6.x86_64.rpm
+	echo "123456"|sudo -s rpm -ivh --nodeps --force $all_package_path/MySQL-shared-compat-5.6.36-1.el6.x86_64.rpm
+	echo "123456"|sudo -s rpm -ivh --nodeps --force $all_package_path/MySQL-test-5.6.36-1.el6.x86_64.rpm
 	if [ $? -eq 0 ]; then
 		let count+=1
 		echo -e "\033[32mMySQL 压缩包安装完成\033[0m"
@@ -1092,12 +1095,12 @@ OracleInstall(){
 	fi
 	
 	# 解压依赖包
-	if [ ! -d /tmp/centos6.8_oracle11gPackages ]; then
-		if [ ! -f /tmp/centos6.8_oracle11gPackages.tar.gz ]; then
-			echo -e "\033[31m错误：centos6.8_oracle11gPackages.tar压缩包不存在，先将压缩包拷贝至/tmp路径下！\033[0m"
+	if [ ! -d $all_package_path/centos6.8_oracle11gPackages ]; then
+		if [ ! -f $all_package_path/centos6.8_oracle11gPackages.tar.gz ]; then
+			echo -e "\033[31m错误：centos6.8_oracle11gPackages.tar压缩包不存在，先将压缩包拷贝至$all_package_path路径下！\033[0m"
 			return
 		else
-			tar zxvf /tmp/centos6.8_oracle11gPackages.tar.gz -C /tmp
+			tar zxvf $all_package_path/centos6.8_oracle11gPackages.tar.gz -C $all_package_path
 			if [ $? -eq 0 ]; then
 				echo -e "\033[32mcentos6.8_oracle11gPackages.tar 解压成功\033[0m"
 			else
@@ -1109,9 +1112,19 @@ OracleInstall(){
 	else
 		echo -e "\033[32mmcentos6.8_oracle11gPackages 已经存在\033[0m"
 	fi
-	echo "123456"|sudo -s rpm -ivh /tmp/centos6.8_oracle11gPackages/part1/*.rpm --force --nodeps
-	echo "123456"|sudo -s rpm -ivh /tmp/centos6.8_oracle11gPackages/part2_xhost/*.rpm --force --nodeps
+	echo "123456"|sudo -s rpm -ivh $all_package_path/centos6.8_oracle11gPackages/part1/*.rpm --force --nodeps
+	echo "123456"|sudo -s rpm -ivh $all_package_path/centos6.8_oracle11gPackages/part2_xhost/*.rpm --force --nodeps
 
+	# 修改/etc/hosts
+	myIP=`ifconfig | grep "inet addr:"|head -n 1 | awk '{print $2}' | sed 's/addr://g'`
+	myHostName=`hostname`
+	if cat /etc/hosts | grep $myHostName >/dev/null
+	then
+		echo -e "\033[32m/etc/hosts 已经添加主机名：$myHostName\033[0m"
+	else
+		echo "$myIP    $myHostName" >> /etc/hosts
+	fi
+	
 	# 配置内核参数及用户限制 /etc/sysctl.conf
 	if cat /etc/sysctl.conf | grep Oracle11gR2 >/dev/null
 		then
@@ -1263,13 +1276,13 @@ OracleInstall(){
 	fi
 	
 	# 解压安装包
-	if [ ! -d /tmp/database ]; then
-		if [ ! -f /tmp/centos6.8_oracle11gPackages.tar.gz ]; then
-			echo -e "\033[31m错误：centos6.8_oracle11gPackages.tar压缩包不存在，先将压缩包拷贝至/tmp路径下！\033[0m"
+	if [ ! -d $all_package_path/database ]; then
+		if [ ! -f $all_package_path/centos6.8_oracle11gPackages.tar.gz ]; then
+			echo -e "\033[31m错误：centos6.8_oracle11gPackages.tar压缩包不存在，先将压缩包拷贝至$all_package_path路径下！\033[0m"
 			return
 		else
-			unzip /tmp/linux.x64_11gR2_database_1of2.zip -d /tmp
-			unzip /tmp/linux.x64_11gR2_database_2of2.zip -d /tmp
+			unzip $all_package_path/linux.x64_11gR2_database_1of2.zip -d $all_package_path
+			unzip $all_package_path/linux.x64_11gR2_database_2of2.zip -d $all_package_path
 			if [ $? -eq 0 ]; then
 				echo -e "\033[32mOracle 安装包解压成功\033[0m"
 			else
@@ -1295,7 +1308,7 @@ OracleInstall(){
 	check_user=`whoami`  
     if [ "$check_user" != "root" ]  
     then
-		cd /tmp/database
+		cd $all_package_path/database
 		./runInstaller
 	else
 		echo -e "\033[31m当前为root用户，用非root用户重新执行脚本。\033[0m"
