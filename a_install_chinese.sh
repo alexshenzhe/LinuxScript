@@ -26,13 +26,15 @@ redirect_port=8443 # tomcat 端口
 ajp_port=8009 # tomcat 端口
 tomcat_path=0 # tomcat 路径
 port_add=0 # tomcat 端口增加量
-tomcat_package=apache-tomcat-7.0.63 # tomcat 安装包名
-dataserver_package=datamonitorserver # dataserver 安装包名
 user_name=yuantiaotech # 需要创建的用户名
 system_version=0 # 操作系统版本
 
 #==================================================================== tomcat 安装 ====================================================================
 tomcatInstall(){
+	# tomcat 安装包名
+	tomcat_package=apache-tomcat-7.0.63
+	# tomcat路径
+	tomcat_path=$install_path/tomcat_$system_name
 	# 检查安装路径
 	if [ ! -d $install_path ]; then
 	    mkdir $install_path
@@ -59,8 +61,6 @@ tomcatInstall(){
 	else
 		echo -e "\033[32m$tomcat_package 压缩包已经解压\033[0m"
 	fi
-
-	tomcat_path=$install_path/tomcat_$system_name
 
 	if [ ! -d $tomcat_path ]; then
 		cp -r /tmp/$tomcat_package $tomcat_path  # 拷贝并重命名
@@ -404,6 +404,8 @@ tomcatInstallSelect(){
 
 #==================================================================== dataserver安装 ====================================================================
 dataserverInstall(){
+	# dataserver 安装包名
+	dataserver_package=datamonitorserver 
 	# 检查路径
 	if [ ! -d $install_path ]; then
 	    mkdir $install_path
@@ -624,29 +626,38 @@ UserNameSelect(){
 
 #==================================================================== JDK安装 ====================================================================
 JDKInstall(){
+	# JDK 安装包名称
+	JDKPackageName=jdk-7u80-linux-x64.tar.gz
+	# JDK文件夹名称
+	JDKFileName=jdk1.7.0_80
+	# JDK安装路径
+	JDKInstallPath=/home/yuantiaotech/amoy
+	# JDK路径
+	JDKPath=$JDKInstallPath/$JDKFileName
+
 	# 检查amoy路径
 	checkInstallPath
 
 	# 用于计数，判断安装是否成功
 	count=0
-	if [ ! -d /home/yuantiaotech/amoy/jdk1.7.0_80 ]; then
-		if [ ! -f /tmp/jdk-7u80-linux-x64.tar.gz ]; then
-			echo -e "\033[31m错误：jdk-7u80-linux-x64.tar.gz压缩包不存在，先将压缩包拷贝至/tmp路径下！\033[0m"
+	if [ ! -d $JDKPath ]; then
+		if [ ! -f /tmp/$JDKPackageName ]; then
+			echo -e "\033[31m错误：$JDKPackageName 压缩包不存在，先将压缩包拷贝至/tmp路径下！\033[0m"
 			return
 		else
-			tar -zxvf /tmp/jdk-7u80-linux-x64.tar.gz -C /home/yuantiaotech/amoy
+			tar -zxvf /tmp/$JDKPackageName -C $JDKInstallPath
 			sleep 3
 			if [ $? -eq 0 ]; then
 				let count+=1
-				echo -e "\033[32mjdk-7u80-linux-x64.tar.gz 解压成功\033[0m"
+				echo -e "\033[32m$JDKPackageName 解压成功\033[0m"
 			else
-				echo -e "\033[31mjdk-7u80-linux-x64.tar.gz 解压失败\033[0m"
+				echo -e "\033[31m$JDKPackageName 解压失败\033[0m"
 				return
 			fi
 		fi
 	else
 		let count+=1
-		echo -e "\033[32mjdk1.7.0_80 已经存在\033[0m"
+		echo -e "\033[32m$JDKFileName 已经存在\033[0m"
 	fi
 
 	# 判断系统版本
@@ -660,7 +671,8 @@ JDKInstall(){
 			echo -e "\033[32mJDK 系统环境变量已经存在\033[0m"
 		else
 			# 修改系统环境变量
-			echo "123456"|sudo -s sed -i '$aexport JAVA_HOME=/home/yuantiaotech/amoy/jdk1.7.0_80' /etc/profile
+			echo "123456"|sudo -s sed -i '$a########### JAVA Environment #############' /etc/profile
+			echo "123456"|sudo -s sed -i '$aexport JAVA_HOME='$(echo $JDKPath)'' /etc/profile
 			echo "123456"|sudo -s sed -i '$aexport JRE_HOME=$JAVA_HOME/jre' /etc/profile
 			echo "123456"|sudo -s sed -i '$aexport CLASSPATH=./:$JAVA_HOME/lib:$JAVA_HOME/jre/lib' /etc/profile
 			echo "123456"|sudo -s sed -i '$aexport PATH=$PATH:$JAVA_HOME/bin' /etc/profile
@@ -673,13 +685,14 @@ JDKInstall(){
 			echo -e "\033[32mJDK 用户环境变量已经存在\033[0m"
 		else
 			# 修改用户环境变量
-			echo "123456"|sudo -s sed -i '$aexport JAVA_HOME=/home/yuantiaotech/amoy/jdk1.7.0_80' /home/yuantiaotech/.bashrc
+			echo "123456"|sudo -s sed -i '$a########### JAVA Environment #############' /etc/profile
+			echo "123456"|sudo -s sed -i '$aexport JAVA_HOME='$(echo $JDKPath)'' /home/yuantiaotech/.bashrc
 			echo "123456"|sudo -s sed -i '$aexport JRE_HOME=$JAVA_HOME/jre' /home/yuantiaotech/.bashrc
 			echo "123456"|sudo -s sed -i '$aexport CLASSPATH=./:$JAVA_HOME/lib:$JAVA_HOME/jre/lib' /home/yuantiaotech/.bashrc
 			echo "123456"|sudo -s sed -i '$aexport PATH=$PATH:$JAVA_HOME/bin' /home/yuantiaotech/.bashrc
 			# 生效配置
 			source /home/yuantiaotech/.bashrc
-			echo "123456"|sudo -s su - root -c "echo "JAVA_HOME=/home/yuantiaotech/amoy/jdk1.7.0_80" >> /etc/environment"
+			echo "123456"|sudo -s su - root -c "echo "JAVA_HOME=$JDKPath" >> /etc/environment"
 			source /etc/environment
 		fi
 	elif [ "$system_version" = "Ubuntu" ]; then
@@ -688,7 +701,8 @@ JDKInstall(){
 			echo -e "\033[32mJDK 环境变量已经存在\033[0m"
 		else
 			# 修改环境变量
-			echo "123456"|sudo -s sed -i '$aexport JAVA_HOME=/home/yuantiaotech/amoy/jdk1.7.0_80' /etc/profile
+			echo "123456"|sudo -s sed -i '$a########### JAVA Environment #############' /etc/profile
+			echo "123456"|sudo -s sed -i '$aexport JAVA_HOME='$(echo $JDKPath)'' /etc/profile
 			echo "123456"|sudo -s sed -i '$aexport JRE_HOME=${JAVA_HOME}/jre' /etc/profile
 			echo "123456"|sudo -s sed -i '$aexport CLASSPATH=.:${JAVA_HOME}/lib:${JRE_HOME}/lib::$CATALINA_HOME/lib' /etc/profile
 			echo "123456"|sudo -s sed -i '$aexport PATH=$JAVA_HOME/bin:$JAVA_HOME/jre/bin' /etc/profile
@@ -696,8 +710,8 @@ JDKInstall(){
 			# 生效配置
 			source /etc/profile
 
-			echo "123456"|sudo -s update-alternatives --install /usr/bin/java java /home/yuantiaotech/amoy/jdk1.7.0_80/jre/bin/java 300
-			echo "123456"|sudo -s update-alternatives --install /usr/bin/javac javac /home/yuantiaotech/amoy/jdk1.7.0_80/bin/javac 300
+			echo "123456"|sudo -s update-alternatives --install /usr/bin/java java $JDKPath/jre/bin/java 300
+			echo "123456"|sudo -s update-alternatives --install /usr/bin/javac javac $JDKPath/bin/javac 300
 			echo "123456"|sudo -s update-alternatives --config java
 			echo "123456"|sudo -s update-alternatives --config javac
 		fi
@@ -712,9 +726,8 @@ JDKInstall(){
 
 	# 添加JDK软链接，CDH安装时候需要
 	echo "123456"|sudo -s mkdir /usr/java
-	echo "123456"|sudo -s ln -s /home/yuantiaotech/amoy/jdk1.7.0_80/ /usr/java/
-	echo "123456"|sudo -s mv /usr/java/jdk1.7.0_80 /usr/java/jdk1.7
-	
+	echo "123456"|sudo -s ln -s $JDKPath/ /usr/java/
+	echo "123456"|sudo -s mv /usr/java/$JDKFileName /usr/java/jdk1.7
 
 	if [ "$count" == 2 ]; then
 		echo -e "\033[32mJDK --------------------------- [安装成功]\033[0m"
@@ -751,6 +764,17 @@ JDKInstallSelect(){
 
 #==================================================================== Supervisor安装 ====================================================================
 SupervisorInstall(){
+	# meld 安装包名称
+	meldPackageName=meld3-1.0.2.tar.gz
+	# meld 文件夹名称
+	meldFileName=meld3-1.0.2
+	# supervisor 安装包名称
+	supervisorPackageName=supervisor-3.3.1.tar.gz
+	# supervisor 文件夹名称
+	supervisorFileName=supervisor-3.3.1
+	# 安装路径
+	installPath=/home/yuantiaotech/amoy
+
 	# 检查amoy路径
 	checkInstallPath
 
@@ -764,50 +788,50 @@ SupervisorInstall(){
 	# 用于计数，判断安装是否成功
 	count=0
 	# 解压
-	if [ ! -d /home/yuantiaotech/amoy/meld3-1.0.2 ]; then
-		if [ ! -f /tmp/meld3-1.0.2.tar.gz ]; then
-			echo -e "\033[31m错误：meld3-1.0.2.tar.gz压缩包不存在，先将压缩包拷贝至/tmp路径下！\033[0m"
+	if [ ! -d $installPath/$meldFileName ]; then
+		if [ ! -f /tmp/$meldPackageName ]; then
+			echo -e "\033[31m错误：$meldPackageName压缩包不存在，先将压缩包拷贝至/tmp路径下！\033[0m"
 			return
 		else
-			tar -zxvf /tmp/meld3-1.0.2.tar.gz -C /home/yuantiaotech/amoy
+			tar -zxvf /tmp/$meldPackageName -C $installPath
 			if [ $? -eq 0 ]; then
 				let count+=1
-				echo -e "\033[32mmeld3-1.0.2.tar.gz 解压成功\033[0m"
+				echo -e "\033[32m$meldPackageName 解压成功\033[0m"
 			else
-				echo -e "\033[31mmeld3-1.0.2.tar.gz 解压失败\033[0m"
+				echo -e "\033[31m$meldPackageName 解压失败\033[0m"
 				return
 			fi
 			sleep 3
 		fi
 	else
 		let count+=1
-		echo -e "\033[32mmeld3-1.0.2 已经存在\033[0m"
+		echo -e "\033[32m$meldFileName 已经存在\033[0m"
 	fi
 
-	if [ ! -d /home/yuantiaotech/amoy/supervisor-3.3.1 ]; then
-		if [ ! -f /tmp/supervisor-3.3.1.tar.gz ]; then
-			echo -e "\033[31m错误：supervisor-3.3.1.tar.gz压缩包不存在，先将压缩包拷贝至/tmp路径下！\033[0m"
+	if [ ! -d $installPath/$supervisorFileName ]; then
+		if [ ! -f /tmp/$supervisorPackageName ]; then
+			echo -e "\033[31m错误：$supervisorPackageName压缩包不存在，先将压缩包拷贝至/tmp路径下！\033[0m"
 			return
 		else
-			tar -zxvf /tmp/supervisor-3.3.1.tar.gz -C /home/yuantiaotech/amoy
+			tar -zxvf /tmp/$supervisorPackageName -C $installPath
 			if [ $? -eq 0 ]; then
 				let count+=1
-				echo -e "\033[32msupervisor-3.3.1.tar.gz 解压成功\033[0m"
+				echo -e "\033[32m$supervisorPackageName 解压成功\033[0m"
 			else
-				echo -e "\033[31msupervisor-3.3.1.tar.gz 解压失败\033[0m"
+				echo -e "\033[31m$supervisorPackageName 解压失败\033[0m"
 				return
 			fi
 			sleep 3
 		fi
 	else
 		let count+=1
-		echo -e "\033[32msupervisor-3.3.1 已经存在\033[0m"
+		echo -e "\033[32m$supervisorFileName 已经存在\033[0m"
 	fi
 	
 	# 安装meld3-1.0.2
-	cd /home/yuantiaotech/amoy/meld3-1.0.2/
-	chown -R yuantiaotech:yuantiaotech /home/yuantiaotech/amoy/meld3-1.0.2
-	chmod -R 777 /home/yuantiaotech/amoy/meld3-1.0.2
+	cd $installPath/$meldFileName/
+	chown -R yuantiaotech:yuantiaotech $installPath/$meldFileName
+	chmod -R 777 $installPath/$meldFileName
 	echo "123456"|sudo -s python setup.py install
 	if [ $? -eq 0 ]; then
 		let count+=1
@@ -816,9 +840,9 @@ SupervisorInstall(){
 		echo -e "\033[31mmeld 安装失败\033[0m"
 	fi
 	# 安装supervisor-3.3.1
-	cd /home/yuantiaotech/amoy/supervisor-3.3.1/
-	chown -R yuantiaotech:yuantiaotech /home/yuantiaotech/amoy/supervisor-3.3.1
-	chmod -R 777 /home/yuantiaotech/amoy/supervisor-3.3.1
+	cd $installPath/$supervisorFileName/
+	chown -R yuantiaotech:yuantiaotech $installPath/$supervisorFileName
+	chmod -R 777 $installPath/$supervisorFileName
 	echo "123456"|sudo -s python setup.py install
 	if [ $? -eq 0 ]; then
 		let count+=1
@@ -892,8 +916,14 @@ MySQLInstall(){
 	else
 		echo -e "\033[31m关闭MySQL...\033[0m"
 		# 关闭Mysql
-		echo "123456"|sudo -s su - root -c "service mysql stop"
-		sleep 3
+		MySQLStatus=`sudo service mysql status`
+		status=`echo ${MySQLStatus%!*}`
+		if [ "$status" == "SUCCESS" ]; then
+			echo -e "\033[32mMySQL 正在关闭...请等待...\033[0m"
+			echo "123456"|sudo -s su - root -c "service mysql stop"
+		else
+			echo -e "\033[32mMySQL 已经关闭\033[0m"
+		fi
 		# 卸载旧版本Mysql
 		echo -e "\033[31m开始卸载旧版本...请稍等...\033[0m"
 		sleep 1
@@ -1290,7 +1320,24 @@ OracleConfigure(){
 		fi
 	fi
 
-	echo -e "\033[32m正在配置...请等待...\033[0m"
+	echo -e "\033[32m正在检查配置...请等待...\033[0m"
+	sleep 1
+	myHostName=`hostname`
+	if cat $ORACLE_HOME/network/admin/listener.ora | grep $myHostName >/dev/null
+		then
+		echo -e "\033[32mlistener.ora 主机名配置正确\033[0m"
+	else
+		echo -e "\033[31mlistener.ora 主机名配置错误\033[0m"
+	fi
+
+	if cat $ORACLE_HOME/network/admin/tnsnames.ora | grep $myHostName >/dev/null
+		then
+		echo -e "\033[32mtnsnames.ora 主机名配置正确\033[0m"
+	else
+		echo -e "\033[31mtnsnames.ora 主机名配置错误\033[0m"
+	fi
+
+	echo -e "\033[32m开始创建amoy用户及配置内存等...请等待...\033[0m"
 	# 创建amoy用户及配置
 	sqlplus /nolog <<EOF
 	connect / as sysdba;
