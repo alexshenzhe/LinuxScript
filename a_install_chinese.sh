@@ -571,7 +571,7 @@ addUser(){
 
 #==================================================================== 删除用户 ====================================================================
 deleteUser(){
-	egrep "^$user_name" /etc/passwd >& /dev/null  
+	egrep "^$user_name" /etc/passwd >& /dev/null
 	if [ $? -ne 0 ]  
 		then
 		echo -e "\033[32m用户: $user_name 不存在\033[0m" 
@@ -579,16 +579,15 @@ deleteUser(){
 		read -p "你正在删除用户：$user_name，是否确定[Y/N]:" val
 		case $val in
 			Y|y)  echo "123456"|sudo -s userdel -r $user_name
-				  echo "123456"|sudo -s chmod -v u+w /etc/sudoers
-				  echo "123456"|sudo -s sed -i -e "/$user_name/d" /etc/sudoers
-				  echo "123456"|sudo -s chmod -v u-w /etc/sudoers
-				  
 				  if [ $? -eq 0  ]; then
+				  	echo "123456"|sudo -s chmod -v u+w /etc/sudoers
+				    echo "123456"|sudo -s sed -i -e "/$user_name/d" /etc/sudoers
+				    echo "123456"|sudo -s chmod -v u-w /etc/sudoers
 				  	echo -e "\033[32m用户: $user_name --------------------------- [删除成功]\033[0m"
 				  else
 				  	echo -e "\033[31m用户: $user_name --------------------------- [删除失败]\033[0m"
 				  	return
-				  fi  
+				  fi
 			;;
 			N|n)  allInstallMenu
 			;;
