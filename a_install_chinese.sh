@@ -583,9 +583,9 @@ deleteUser(){
 		case $val in
 			Y|y)  echo "123456"|sudo -s userdel -r $user_name
 				  if [ $? -eq 0  ]; then
-				  	echo "123456"|sudo -s chmod -v u+w /etc/sudoers
-				    echo "123456"|sudo -s sed -i -e "/$user_name/d" /etc/sudoers
-				    echo "123456"|sudo -s chmod -v u-w /etc/sudoers
+					echo "123456"|sudo -s chmod -v u+w /etc/sudoers
+				  	echo "123456"|sudo -s sed -i -e "/$user_name/d" /etc/sudoers
+				  	echo "123456"|sudo -s chmod -v u-w /etc/sudoers
 				  	echo -e "\033[32m用户: $user_name --------------------------- [删除成功]\033[0m"
 				  else
 				  	echo -e "\033[31m用户: $user_name --------------------------- [删除失败]\033[0m"
@@ -629,11 +629,11 @@ UserNameSelect(){
 JDKInstall(){
 	# JDK 安装包名称
 	JDKPackageName=jdk-7u80-linux-x64.tar.gz
-	# JDK文件夹名称
+	# JDK 文件夹名称
 	JDKFileName=jdk1.7.0_80
-	# JDK安装路径
+	# JDK 安装路径
 	JDKInstallPath=/home/yuantiaotech/amoy
-	# JDK路径
+	# JDK 路径
 	JDKPath=$JDKInstallPath/$JDKFileName
 
 	# 检查amoy路径
@@ -1029,6 +1029,16 @@ MySQLInstall(){
 		echo -e "\033[31mMySQL --------------------------- [安装失败]\033[0m"
 	fi
 	
+	# 修改/etc/hosts
+	myIP=`ifconfig | grep "inet addr:"|head -n 1 | awk '{print $2}' | sed 's/addr://g'`
+	myHostName=`hostname`
+	if cat /etc/hosts | grep $myHostName >/dev/null
+	then
+		echo -e "\033[32m/etc/hosts 已经添加主机名：$myHostName\033[0m"
+	else
+		echo "123456"|sudo -s sed -i '$a'$(echo $myIP)'    '$(echo $myHostName)'' /etc/hosts
+	fi
+
 	# 显示初始密码
 	pwdFile=`sudo cat /root/.mysql_secret`
 	initPwd=${pwdFile##*: }
@@ -1122,7 +1132,7 @@ OracleInstall(){
 	then
 		echo -e "\033[32m/etc/hosts 已经添加主机名：$myHostName\033[0m"
 	else
-		echo "$myIP    $myHostName" >> /etc/hosts
+		echo "123456"|sudo -s sed -i '$a'$(echo $myIP)'    '$(echo $myHostName)'' /etc/hosts
 	fi
 	
 	# 配置内核参数及用户限制 /etc/sysctl.conf
@@ -1364,6 +1374,7 @@ OracleConfigure(){
 	alter system set sga_target=384m scope=spfile;
 	alter system set pga_aggregate_target=96m;
 	alter system set PROCESSES=300 scope=spfile;
+	alter profile default limit password_life_time unlimited;
 	shutdown immediate;
 	startup;
 	exit
