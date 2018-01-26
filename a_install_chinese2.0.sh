@@ -1,10 +1,10 @@
 #!/bin/bash
 
-# 文 件 名 : a_install_chinese.sh
+# 文 件 名 : a_install_chinese2.0.sh
 # 作    者 : 沈喆
 # 版    本 : 1.1
-# 更新时间 : 2017/12/13
-# 描    述 : 这个脚本用于部署过程中安装JDK、Supermap、Supervisor、MySQL、Oracle、Tomcat、dataserver、toolsDownload，后续增不增加就看我心情了。
+# 更新时间 : 2018/01/26
+# 描    述 : 这个脚本用于部署态势2.0过程中安装JDK、Supermap、Supervisor、MySQL、Oracle、Tomcat、toolsDownload，后续增不增加就看我心情了。
 #            脚本默认会配置tomcat的默认内存(512~1024m)及报表，新增加了创建或删除linux用户以及关闭防火墙及SELINUX，根据提示操作即可。
 # 依 赖 包 : JDK        : jdk-7u80-linux-x64.tar.gz
 #            Supervisor : supervisor-3.3.1.tar.gz \ meld3-1.0.2.tar.gz \ supervisord
@@ -289,7 +289,6 @@ installPathSelect(){
 	echo -e "\033[32m┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\033[0m"
 	echo -e "\033[32m┠┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈ 选择安装路径 ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┨\033[0m"
 	echo -e "\033[32m┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫\033[0m"
-	echo -e "\033[32m┃ [1]/home/yuantiaotech/project/$system_name  \033[0m"
 	echo -e "\033[32m┃ [2]/home/yuantiaotech                      ┃\033[0m"
 	echo -e "\033[32m┃ [3]当前脚本路径：$script_path			   \033[0m"
 	echo -e "\033[32m┃ [B]返回主菜单                  [Q]退出安装 ┃\033[0m"
@@ -327,10 +326,8 @@ tomcatInstallSelect(){
 	echo -e "\033[32m┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\033[0m"
 	echo -e "\033[32m┠┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈ TOMCAT 安装 ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┨\033[0m"
 	echo -e "\033[32m┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫\033[0m"
-	echo -e "\033[32m┃ [1]index                   [2]monitor      ┃\033[0m"
-	echo -e "\033[32m┃ [3]guide                   [4]flowanalysis ┃\033[0m"
-	echo -e "\033[32m┃ [5]toolsDownload           [6]SuperMap     ┃\033[0m"
-	echo -e "\033[32m┃ [7]GeoLayer                [8]GeoMap       ┃\033[0m"
+	echo -e "\033[32m┃ [1]GeoMap                  [2]GeoLayer     ┃\033[0m"
+	echo -e "\033[32m┃ [3]toolsDownload           [4]SuperMap     ┃\033[0m"
 	echo -e "\033[32m┃ [B]返回主菜单              [Q]退出安装     ┃\033[0m"
 	echo -e "\033[32m┃                                            ┃\033[0m"	
 	echo -e "\033[32m┃ *支持直接输入                              ┃\033[0m"
@@ -338,51 +335,27 @@ tomcatInstallSelect(){
 
 	read -p "选择安装的系统名称编号或直接输入:" val
 	case $val in
-		1)	system_name=index
-			port_add=0
+		1)  system_name=geoMap
+			port_add=18
 			portChange
 			installPathSelect
 			tomcatInstall
 		;;
-		2)	system_name=monitor
-			port_add=1
-			portChange
-			installPathSelect
-			tomcatInstall
-		;;
-		3)	system_name=guide
-			port_add=2
-			portChange
-			installPathSelect
-			tomcatInstall
-		;;
-		4)  system_name=flowanalysis
-			port_add=3
-			portChange
-			installPathSelect
-			tomcatInstall
-		;;
-		5)  system_name=toolsDownload
-			port_add=17
-			portChange
-			installPathSelect
-			tomcatInstall
-		;;
-		6)  system_name=SuperMap
-			installPathSelect
-			supermapInstall
-		;;
-		7)  system_name=geoLayer
+		2)  system_name=geoLayer
 			port_add=7
 			portChange
 			installPathSelect
 			tomcatInstall
 		;;
-		8)  system_name=geoMap
-			port_add=18
+		3)  system_name=toolsDownload
+			port_add=17
 			portChange
 			installPathSelect
 			tomcatInstall
+		;;
+		4)  system_name=SuperMap
+			installPathSelect
+			supermapInstall
 		;;
 		B|b)  allInstallMenu
 		;;
@@ -399,124 +372,6 @@ tomcatInstallSelect(){
 			ajp_port=$val5
 			installPathSelect
 			tomcatInstall
-		;;
-	esac
-}
-
-#==================================================================== dataserver安装 ====================================================================
-dataserverInstall(){
-	# dataserver 安装包名
-	dataserver_package=datamonitorserver 
-	# 检查路径
-	if [ ! -d $install_path ]; then
-	    mkdir $install_path
-	    echo -e "\033[32m$install_path 安装路径创建成功\033[0m"
-	else
-	    echo -e "\033[32m$install_path 安装路径已经存在\033[0m"
-	fi
-	
-	dataserver_path=$install_path/dataserver_$system_name
-	# 拷贝 dataserver 到安装路径
-	if [ ! -d $dataserver_path ]; then
-	    cp -r $all_package_path/$dataserver_package/ $dataserver_path
-	else
-	    echo -e "\033[32m$install_path/$system_name 已经存在\033[0m"
-	    return
-	fi
-
-	# 重命名 dataserver.jar
-	mv $dataserver_path/datamonitorserver.jar $dataserver_path/dataserver_$system_name.jar
-
-	# IP
-	IP_old=`cat $dataserver_path/config/jdbc.properties|sed -n '3p'|sed 's#jdbc.url=jdbc:mysql://##g'|sed 's#:3306/indexmonitor##g'`
-	IP_new=`ifconfig | grep "inet addr:"|head -n 1 | awk '{print $2}' | sed 's/addr://g'`
-	echo -e "\033[32m旧IP: $IP_old 新IP: $IP_new\033[0m"
-
-	# 用于计数，判断安装是否成功
-	count=0
-	# 配置 jdbc.properties
-	sed -i "s#\(jdbc.url=jdbc:mysql://\).*#\1$IP_new:3306/$database_name#g" $dataserver_path/config/jdbc.properties
-	if [ $? -eq 0  ]; then
-		let count+=1
-		echo -e "\033[32mdataserver_$system_name jdbc.properties 配置成功\033[0m"
-	else
-		echo -e "\033[31mdataserver_$system_name jdbc.properties 配置失败\033[0m"
-	fi
-
-	# 配置 server.properties
-	sed -i "s#server.port=....#server.port=$server_port#g" $dataserver_path/config/server.properties
-	if [ $? -eq 0  ]; then
-		let count+=1
-	    echo -e "\033[32mdataserver_$system_name server.properties 配置成功 server_port=$server_port\033[0m"
-	else
-	    echo -e "\033[31mdataserver_$system_name server.properties 配置失败\033[0m"
-	fi
-	
-	# 配置 start.sh
-	if cat $dataserver_path/start.sh | grep dataserver_$system_name.jar >/dev/null
-		then
-		let count+=1
-		echo -e "\033[32mstart.sh 已经配置\033[0m"
-	else
-		sed -i "s/datamonitorserver.jar/dataserver_$system_name.jar/g" $dataserver_path/start.sh
-		if cat $dataserver_path/start.sh | grep dataserver_$system_name.jar >/dev/null 
-			then
-			let count+=1
-			echo -e "\033[32mstart.sh 配置成功\033[0m"
-		else
-			echo -e "\033[31mstart.sh 配置失败\033[0m"
-		fi
-	fi
-	if [ "$count" == 3 ]; then
-		echo -e "\033[32mdataserver_$system_name --------------------------- [安装成功]\033[0m"
-	elif [ "$count" != 3 ]; then
-		echo -e "\033[31mdataserver_$system_name --------------------------- [安装失败]\033[0m"
-	fi
-}
-
-#==================================================================== dataserver名称选择 ====================================================================
-dataserverInstallSelect(){
-	echo -e "\033[32m┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\033[0m"
-	echo -e "\033[32m┠┈┈┈┈┈┈┈┈┈┈┈┈┈┈ DATASERVER 安装 ┈┈┈┈┈┈┈┈┈┈┈┈┈┨\033[0m"
-	echo -e "\033[32m┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫\033[0m"
-	echo -e "\033[32m┃ [1]index                       [2]monitor  ┃\033[0m"
-	echo -e "\033[32m┃ [3]guide                                   ┃\033[0m"
-	echo -e "\033[32m┃ [B]返回主菜单                  [Q]退出安装 ┃\033[0m"
-	echo -e "\033[32m┃                                            ┃\033[0m"	
-	echo -e "\033[32m┃ *支持直接输入                              ┃\033[0m"
-	echo -e "\033[32m┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\033[0m"
-
-	read -p "选择安装的系统名称编号或直接输入:" val
-	case $val in
-		1)	system_name=index
-			database_name=indexmonitor
-			server_port=4370
-			installPathSelect
-			dataserverInstall
-		;;
-		2)	system_name=monitor
-			database_name=monitor
-			server_port=4371
-			installPathSelect
-			dataserverInstall
-		;;
-		3)	system_name=guide
-			database_name=guide
-			server_port=4372
-			installPathSelect
-			dataserverInstall
-		;;
-		B|b)  allInstallMenu
-		;; 
-		Q|q)  exit 0
-		;;
-		*)	system_name=$val
-			read -p "请输入数据库名称:" val2
-			database_name=$va2
-			read -p "请输入端口号(默认:4370):" val3
-			server_port=$val3
-			installPathSelect
-			dataserverInstall
 		;;
 	esac
 }
@@ -632,7 +487,7 @@ JDKInstall(){
 	# JDK 文件夹名称
 	JDKFileName=jdk1.7.0_80
 	# JDK 安装路径
-	JDKInstallPath=/home/yuantiaotech/amoy
+	JDKInstallPath=/home/yuantiaotech
 	# JDK 路径
 	JDKPath=$JDKInstallPath/$JDKFileName
 
@@ -661,61 +516,38 @@ JDKInstall(){
 		echo -e "\033[32m$JDKFileName 已经存在\033[0m"
 	fi
 
-	# 判断系统版本
-	if [ "$system_version" = "CentOS" ]; then
-		# 卸载旧版本
-		echo -e "\033[31m开始卸载旧版本...请等待...\033[0m"
-		echo "123456"|sudo -s su - root -c "rpm -qa | grep java | xargs rpm -e --nodeps"
+	# 卸载旧版本
+	echo -e "\033[31m开始卸载旧版本...请等待...\033[0m"
+	echo "123456"|sudo -s su - root -c "rpm -qa | grep java | xargs rpm -e --nodeps"
 
-		if cat /etc/profile | grep JAVA_HOME >/dev/null
-			then
-			echo -e "\033[32mJDK 系统环境变量已经存在\033[0m"
-		else
-			# 修改系统环境变量
-			echo "123456"|sudo -s sed -i '$a########### JAVA Environment #############' /etc/profile
-			echo "123456"|sudo -s sed -i '$aexport JAVA_HOME='$(echo $JDKPath)'' /etc/profile
-			echo "123456"|sudo -s sed -i '$aexport JRE_HOME=$JAVA_HOME/jre' /etc/profile
-			echo "123456"|sudo -s sed -i '$aexport CLASSPATH=./:$JAVA_HOME/lib:$JAVA_HOME/jre/lib' /etc/profile
-			echo "123456"|sudo -s sed -i '$aexport PATH=$PATH:$JAVA_HOME/bin' /etc/profile
-			# 生效配置
-			source /etc/profile
-		fi
+	if cat /etc/profile | grep JAVA_HOME >/dev/null
+		then
+		echo -e "\033[32mJDK 系统环境变量已经存在\033[0m"
+	else
+		# 修改系统环境变量
+		echo "123456"|sudo -s sed -i '$a########### JAVA Environment #############' /etc/profile
+		echo "123456"|sudo -s sed -i '$aexport JAVA_HOME='$(echo $JDKPath)'' /etc/profile
+		echo "123456"|sudo -s sed -i '$aexport JRE_HOME=$JAVA_HOME/jre' /etc/profile
+		echo "123456"|sudo -s sed -i '$aexport CLASSPATH=./:$JAVA_HOME/lib:$JAVA_HOME/jre/lib' /etc/profile
+		echo "123456"|sudo -s sed -i '$aexport PATH=$PATH:$JAVA_HOME/bin' /etc/profile
+		# 生效配置
+		source /etc/profile
+	fi
 
-		if cat /home/yuantiaotech/.bashrc | grep JAVA_HOME >/dev/null
-			then
-			echo -e "\033[32mJDK 用户环境变量已经存在\033[0m"
-		else
-			# 修改用户环境变量
-			echo "123456"|sudo -s sed -i '$a########### JAVA Environment #############' /etc/profile
-			echo "123456"|sudo -s sed -i '$aexport JAVA_HOME='$(echo $JDKPath)'' /home/yuantiaotech/.bashrc
-			echo "123456"|sudo -s sed -i '$aexport JRE_HOME=$JAVA_HOME/jre' /home/yuantiaotech/.bashrc
-			echo "123456"|sudo -s sed -i '$aexport CLASSPATH=./:$JAVA_HOME/lib:$JAVA_HOME/jre/lib' /home/yuantiaotech/.bashrc
-			echo "123456"|sudo -s sed -i '$aexport PATH=$PATH:$JAVA_HOME/bin' /home/yuantiaotech/.bashrc
-			# 生效配置
-			source /home/yuantiaotech/.bashrc
-			echo "123456"|sudo -s su - root -c "echo "JAVA_HOME=$JDKPath" >> /etc/environment"
-			source /etc/environment
-		fi
-	elif [ "$system_version" = "Ubuntu" ]; then
-		if cat /etc/profile | grep JAVA_HOME >/dev/null
-			then
-			echo -e "\033[32mJDK 环境变量已经存在\033[0m"
-		else
-			# 修改环境变量
-			echo "123456"|sudo -s sed -i '$a########### JAVA Environment #############' /etc/profile
-			echo "123456"|sudo -s sed -i '$aexport JAVA_HOME='$(echo $JDKPath)'' /etc/profile
-			echo "123456"|sudo -s sed -i '$aexport JRE_HOME=${JAVA_HOME}/jre' /etc/profile
-			echo "123456"|sudo -s sed -i '$aexport CLASSPATH=.:${JAVA_HOME}/lib:${JRE_HOME}/lib::$CATALINA_HOME/lib' /etc/profile
-			echo "123456"|sudo -s sed -i '$aexport PATH=$JAVA_HOME/bin:$JAVA_HOME/jre/bin' /etc/profile
-			echo "123456"|sudo -s sed -i '$aexport CLASSPATH=$CLASSPATH:.:$JAVA_HOME/lib:$JAVA_HOME/jre/lib' /etc/profile
-			# 生效配置
-			source /etc/profile
-
-			echo "123456"|sudo -s update-alternatives --install /usr/bin/java java $JDKPath/jre/bin/java 300
-			echo "123456"|sudo -s update-alternatives --install /usr/bin/javac javac $JDKPath/bin/javac 300
-			echo "123456"|sudo -s update-alternatives --config java
-			echo "123456"|sudo -s update-alternatives --config javac
-		fi
+	if cat /home/yuantiaotech/.bashrc | grep JAVA_HOME >/dev/null
+		then
+		echo -e "\033[32mJDK 用户环境变量已经存在\033[0m"
+	else
+		# 修改用户环境变量
+		echo "123456"|sudo -s sed -i '$a########### JAVA Environment #############' /home/yuantiaotech/.bashrc
+		echo "123456"|sudo -s sed -i '$aexport JAVA_HOME='$(echo $JDKPath)'' /home/yuantiaotech/.bashrc
+		echo "123456"|sudo -s sed -i '$aexport JRE_HOME=$JAVA_HOME/jre' /home/yuantiaotech/.bashrc
+		echo "123456"|sudo -s sed -i '$aexport CLASSPATH=./:$JAVA_HOME/lib:$JAVA_HOME/jre/lib' /home/yuantiaotech/.bashrc
+		echo "123456"|sudo -s sed -i '$aexport PATH=$PATH:$JAVA_HOME/bin' /home/yuantiaotech/.bashrc
+		# 生效配置
+		source /home/yuantiaotech/.bashrc
+		echo "123456"|sudo -s su - root -c "echo "JAVA_HOME=$JDKPath" >> /etc/environment"
+		source /etc/environment
 	fi
 	
 	if [ $? -eq 0 ]; then
@@ -741,30 +573,6 @@ JDKInstall(){
 	fi
 }
 
-#==================================================================== JDK安装对应操作系统选择 ====================================================================
-JDKInstallSelect(){
-	echo -e "\033[32m┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\033[0m"
-	echo -e "\033[32m┠┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈ JDK 安装 ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┨\033[0m"
-	echo -e "\033[32m┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫\033[0m"
-	echo -e "\033[32m┃ [1]CentOS                      [2]Ubuntu   ┃\033[0m"
-	echo -e "\033[32m┃ [B]返回上级菜单                [Q]退出安装 ┃\033[0m"
-	echo -e "\033[32m┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\033[0m"
-
-	read -p "选择操作系统版本编号或直接输入:" val
-	case $val in
-		1)	system_version=CentOS
-			JDKInstall
-		;;
-		2)	system_version=Ubuntu
-			JDKInstall
-		;;
-		B|b)  allInstallMenu
-		;;
-		Q|q)  exit 0
-		;;
-	esac
-}
-
 #==================================================================== Supervisor安装 ====================================================================
 SupervisorInstall(){
 	# meld 安装包名称
@@ -776,7 +584,7 @@ SupervisorInstall(){
 	# supervisor 文件夹名称
 	supervisorFileName=supervisor-3.3.1
 	# 安装路径
-	installPath=/home/yuantiaotech/amoy
+	installPath=/home/yuantiaotech
 
 	# 检查amoy路径
 	checkInstallPath
@@ -1001,7 +809,7 @@ MySQLInstall(){
 		echo "123456"|sudo -s sed -i '$acharacter_set_server=utf8' /home/yuantiaotech/my.cnf
 		echo "123456"|sudo -s sed -i '$a# Disabling symbolic-links is recommended to prevent assorted security risks' /home/yuantiaotech/my.cnf
 		echo "123456"|sudo -s sed -i '$asymbolic-links=0' /home/yuantiaotech/my.cnf
-		#echo "123456"|sudo -s sed -i '$askip-name-resolve' /home/yuantiaotech/my.cnf
+		echo "123456"|sudo -s sed -i '$askip-name-resolve' /home/yuantiaotech/my.cnf
 		echo "123456"|sudo -s sed -i '$a[mysqld_safe]' /home/yuantiaotech/my.cnf
 		echo "123456"|sudo -s sed -i '$alog-error=/var/log/mysqld.log' /home/yuantiaotech/my.cnf
 		echo "123456"|sudo -s sed -i '$apid-file=/var/run/mysqld/mysqld.pid' /home/yuantiaotech/my.cnf
@@ -1306,6 +1114,7 @@ OracleInstall(){
 	fi
 	# 图形程序显示到桌面上DISPLAY设置
 	IP_xhost=0
+	stty erase ^H
 	read -p "输入笔记本IP地址(例如192.168.0.111):" val
 	case $val in
 		*)	IP_xhost=$val
@@ -1566,19 +1375,19 @@ closeFirewall(){
 	fi
 }
 
-#==================================================================== 检查/home/yuantiaotech/amoy路径是否存在 ====================================================================
+#==================================================================== 检查/home/yuantiaotech路径是否存在 ====================================================================
 checkInstallPath(){
 	# 检查路径
-	if [ ! -d /home/yuantiaotech/amoy ]; then
-	    mkdir /home/yuantiaotech/amoy
+	if [ ! -d /home/yuantiaotech ]; then
+	    mkdir /home/yuantiaotech
 	    if [ $? -eq 0 ]; then
-			echo -e "\033[32m/home/yuantiaotech/amoy 路径创建成功\033[0m"
+			echo -e "\033[32m/home/yuantiaotech 路径创建成功\033[0m"
 		else
-			echo -e "\033[31m/home/yuantiaotech/amoy 路径创建失败\033[0m"
+			echo -e "\033[31m/home/yuantiaotech 路径创建失败\033[0m"
 			exit 0
 		fi
 	else
-	    echo -e "\033[32m/home/yuantiaotech/amoy 路径已经存在\033[0m"
+	    echo -e "\033[32m/home/yuantiaotech 路径已经存在\033[0m"
 	fi
 }
 
@@ -1590,18 +1399,18 @@ allInstallMenu(){
 	echo -e "\033[32m┃ [1]创建/删除用户             [2]JDK        ┃\033[0m"
 	echo -e "\033[32m┃ [3]Supervisor                [4]MySQL      ┃\033[0m"
 	echo -e "\033[32m┃ [5]Oracle                    [6]Tomcat     ┃\033[0m"
-	echo -e "\033[32m┃ [7]Dataserver                [8]关闭防火墙 ┃\033[0m"
+	echo -e "\033[32m┃ [7]关闭防火墙                              ┃\033[0m"
 	echo -e "\033[32m┃ [Q]退出安装                                ┃\033[0m"	
 	echo -e "\033[32m┃                                            ┃\033[0m"	
 	echo -e "\033[32m┃ *请根据菜单提示选择相应编号                ┃\033[0m"
 	echo -e "\033[32m┃ *确保安装包已经放置在/tmp路径下            ┃\033[0m"
 	echo -e "\033[32m┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\033[0m"
-
+	#stty erase ^H
 	read -p "选择需要安装的软件编号:" val
 	case $val in
 		1)	UserSelect
 		;;
-		2)  JDKInstallSelect
+		2)  JDKInstall
 		;;
 		3)	SupervisorInstall
 		;;
@@ -1611,9 +1420,7 @@ allInstallMenu(){
 		;;
 		6)	tomcatInstallSelect
  		;;
-		7)	dataserverInstallSelect
-		;;
-		8)	closeFirewall
+		7)	closeFirewall
 		;;
 		Q|q)  exit 0
 		;;
