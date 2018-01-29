@@ -5,13 +5,14 @@
 # 版    本 : 1.1
 # 更新时间 : 2018/01/26
 # 描    述 : 这个脚本用于部署态势2.0过程中安装JDK、Supermap、Supervisor、MySQL、Oracle、Tomcat、toolsDownload，后续增不增加就看我心情了。
-#            脚本默认会配置tomcat的默认内存(512~1024m)及报表，新增加了创建或删除linux用户以及关闭防火墙及SELINUX，根据提示操作即可。
+#			 脚本默认会配置tomcat的默认内存(512~1024m)及报表，新增加了创建或删除linux用户以及关闭防火墙及SELINUX，根据提示操作即可。
 # 依 赖 包 : JDK        : jdk-7u80-linux-x64.tar.gz
-#            Supervisor : supervisor-3.3.1.tar.gz \ meld3-1.0.2.tar.gz \ supervisord
+#			 Supervisor : supervisor-3.3.1.tar.gz \ meld3-1.0.2.tar.gz \ supervisord
 #			 MySQL      : MySQL-5.6.36-1.el6.x86_64.rpm-bundle.tar
-#            Tomcat     : apache-tomcat-7.0.63.tar.gz
-#            Supermap   : supermap_iserver_7.1.2_linux64.tar.gz
+#			 Tomcat     : apache-tomcat-7.0.63.tar.gz
+#			 Supermap   : supermap_iserver_7.1.2_linux64.tar.gz
 #			 Oracle     : linux.x64_11gR2_database_1of2.zip \ linux.x64_11gR2_database_2of2.zip \ centos6.8_oracle11grpm.tar.gz
+#			 ActiveMQ   : apache-activemq-5.14.2-bin.tar.gz
 #			 以上安装包可以从150服务器的/项目部文档/技术支持/部署常用软件/脚本/a_install文件夹下获取
 
 # 系统变量
@@ -29,6 +30,7 @@ port_add=0 # tomcat 端口增加量
 user_name=yuantiaotech # 需要创建的用户名
 system_version=0 # 操作系统版本
 all_package_path=/tmp # 安装包默认放置路径，所有安装包都会到这个路径下去读取
+
 
 #==================================================================== tomcat 安装 ====================================================================
 tomcatInstall(){
@@ -838,14 +840,7 @@ MySQLInstall(){
 	fi
 	
 	# 修改/etc/hosts
-	myIP=`ifconfig | grep "inet addr:"|head -n 1 | awk '{print $2}' | sed 's/addr://g'`
-	myHostName=`hostname`
-	if cat /etc/hosts | grep $myHostName >/dev/null
-	then
-		echo -e "\033[32m/etc/hosts 已经添加主机名：$myHostName\033[0m"
-	else
-		echo "123456"|sudo -s sed -i '$a'$(echo $myIP)'    '$(echo $myHostName)'' /etc/hosts
-	fi
+	addHostName
 
 	# 显示初始密码
 	pwdFile=`sudo cat /root/.mysql_secret`
@@ -934,14 +929,7 @@ OracleInstall(){
 	echo "123456"|sudo -s rpm -ivh $all_package_path/centos6.8_oracle11gPackages/part2_xhost/*.rpm --force --nodeps
 
 	# 修改/etc/hosts
-	myIP=`ifconfig | grep "inet addr:"|head -n 1 | awk '{print $2}' | sed 's/addr://g'`
-	myHostName=`hostname`
-	if cat /etc/hosts | grep $myHostName >/dev/null
-	then
-		echo -e "\033[32m/etc/hosts 已经添加主机名：$myHostName\033[0m"
-	else
-		echo "123456"|sudo -s sed -i '$a'$(echo $myIP)'    '$(echo $myHostName)'' /etc/hosts
-	fi
+	addHostName
 	
 	# 配置内核参数及用户限制 /etc/sysctl.conf
 	if cat /etc/sysctl.conf | grep Oracle11gR2 >/dev/null
@@ -1375,6 +1363,62 @@ closeFirewall(){
 	fi
 }
 
+#==================================================================== ActiveMQ 安装 ====================================================================
+ActiveMQInstall(){
+	ActiveMQPackageName=apache-activemq-5.14.2-bin.tar.gz
+	ActiveMQFileName=apache-activemq-5.14.2
+	ActiveMQinstallPath=/home/yuantiaotech
+
+	# 检查安装路径
+	checkInstallPath
+	# 解压依赖包
+	if [ ! -d $all_package_path/$ActiveMQFileName ]; then
+		if [ ! -f $all_package_path/$ActiveMQPackageName ]; then
+			echo -e "\033[31m错误：$ActiveMQPackageName压缩包不存在，先将压缩包拷贝至$all_package_path路径下！\033[0m"
+			return
+		else
+			tar zxvf $all_package_path/$ActiveMQPackageName -C $ActiveMQinstallPath
+			if [ $? -eq 0 ]; then
+				echo -e "\033[32m$ActiveMQPackageName 解压成功\033[0m"
+				let count+=1
+			else
+				echo -e "\033[31m$ActiveMQPackageName 解压失败\033[0m"
+				return
+			fi
+			sleep 3
+		fi
+	else
+		echo -e "\033[32mm$ActiveMQFileName 已经存在\033[0m"
+		let count+=1
+	fi
+
+	# ActiveMQ内存限制
+	echo "123456"|sudo -s sed -i '2a ACTIVEMQ_OPTS_MEMORY=\"-Xms512m -Xmx1024m\"' $ActiveMQinstallPath/$ActiveMQFileName/bin/activemq
+	
+	# 配置脚本JAVA_HOME路径
+	echo "123456"|sudo -s ln -s $ActiveMQinstallPath/$ActiveMQFileName/bin/activemq /etc/init.d/
+	echo "123456"|sudo -s sed -i '2a export JAVA_HOME='$(echo $JAVA_HOME)'' /etc/init.d/activemq
+	echo "123456"|sudo -s sed -i '2a ACTIVEMQ_HOME='$(echo $ActiveMQinstallPath)'/'$(echo $ActiveMQFileName)'' /etc/init.d/activemq
+
+	if [ $? -eq 0 ]; then
+		echo -e "\033[32mactivemq 脚本配置成功\033[0m"
+		let count+=1
+	else
+		echo -e "\033[31mactivemq 脚本配置失败\033[0m"
+		return
+	fi
+	echo "123456"|sudo -s chmod 777 /etc/init.d/activemq
+
+	# 开机自启
+	echo "123456"|sudo -s chkconfig activemq on
+
+	if [ "$count" == 2 ]; then
+		echo -e "\033[32mActiveMQ --------------------------- [安装成功]\033[0m"
+	elif [ "$count" != 2 ]; then
+		echo -e "\033[31mActiveMQ --------------------------- [安装失败]\033[0m"
+	fi
+}
+
 #==================================================================== 检查/home/yuantiaotech路径是否存在 ====================================================================
 checkInstallPath(){
 	# 检查路径
@@ -1391,15 +1435,30 @@ checkInstallPath(){
 	fi
 }
 
+#==================================================================== 添加主机名 ====================================================================
+addHostName(){
+	# 获取本机IP
+	myIP=`ifconfig | grep "inet addr:"|head -n 1 | awk '{print $2}' | sed 's/addr://g'`
+	# 获取本机主机名
+	myHostName=`hostname`
+	# 检查并添加到/etc/hosts
+	if cat /etc/hosts | grep $myHostName >/dev/null
+	then
+		echo -e "\033[32m/etc/hosts 已经添加主机名：$myHostName\033[0m"
+	else
+		echo "123456"|sudo -s sed -i '$a'$(echo $myIP)'    '$(echo $myHostName)'' /etc/hosts
+	fi
+}
+
 #==================================================================== 主菜单 ====================================================================
 allInstallMenu(){
 	echo -e "\033[32m┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\033[0m"
 	echo -e "\033[32m┣━━━━━━━━━━━━━━━━━━ 主菜单 ━━━━━━━━━━━━━━━━━━┫\033[0m"
 	echo -e "\033[32m┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫\033[0m"
-	echo -e "\033[32m┃ [1]创建/删除用户             [2]JDK        ┃\033[0m"
-	echo -e "\033[32m┃ [3]Supervisor                [4]MySQL      ┃\033[0m"
-	echo -e "\033[32m┃ [5]Oracle                    [6]Tomcat     ┃\033[0m"
-	echo -e "\033[32m┃ [7]关闭防火墙                              ┃\033[0m"
+	echo -e "\033[32m┃ [1]关闭防火墙             [2]创建/删除用户 ┃\033[0m"
+	echo -e "\033[32m┃ [3]JDK                    [4]Supervisor    ┃\033[0m"
+	echo -e "\033[32m┃ [5]MySQL                  [6]Oracle        ┃\033[0m"
+	echo -e "\033[32m┃ [7]ActiveMQ               [8]Tomcat        ┃\033[0m"
 	echo -e "\033[32m┃ [Q]退出安装                                ┃\033[0m"	
 	echo -e "\033[32m┃                                            ┃\033[0m"	
 	echo -e "\033[32m┃ *请根据菜单提示选择相应编号                ┃\033[0m"
@@ -1408,20 +1467,22 @@ allInstallMenu(){
 	#stty erase ^H
 	read -p "选择需要安装的软件编号:" val
 	case $val in
-		1)	UserSelect
+		1)	closeFirewall
 		;;
-		2)  JDKInstall
+		2)	UserSelect
 		;;
-		3)	SupervisorInstall
+		3)  JDKInstall
 		;;
-		4)	MySQLInstall
+		4)	SupervisorInstall
 		;;
-		5)	OracleInstallSelect
+		5)	MySQLInstall
 		;;
-		6)	tomcatInstallSelect
+		6)	OracleInstallSelect
+		;;
+		7)	ActiveMQInstall
  		;;
-		7)	closeFirewall
-		;;
+		8)	tomcatInstallSelect
+ 		;;
 		Q|q)  exit 0
 		;;
 		*)  echo -e "\033[31m输入有误\033[0m"
