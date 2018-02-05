@@ -4,8 +4,9 @@
 # 作    者 : 沈喆
 # 版    本 : 1.1
 # 更新时间 : 2018/01/26
-# 描    述 : 这个脚本用于部署态势2.0过程中安装JDK、Supermap、Supervisor、MySQL、Oracle、Tomcat、toolsDownload，后续增不增加就看我心情了。
-#			 脚本默认会配置tomcat的默认内存(512~1024m)及报表，新增加了创建或删除linux用户以及关闭防火墙及SELINUX，根据提示操作即可。
+# 描    述 : 这个脚本用于部署态势2.0过程中安装JDK、Supermap、Supervisor、MySQL、Oracle、Tomcat、toolsDownload、ActiveMQ，后续增不增加就看我心情了。
+#			 脚本默认会配置tomcat的默认内存(512~1024m)及报表，新增加了创建或删除linux用户以及关闭防火墙及SELINUX，自动将ActiveMQ添加到系统服务开机自启进行管理，
+#			 根据提示操作即可。
 # 依 赖 包 : JDK        : jdk-7u80-linux-x64.tar.gz
 #			 Supervisor : supervisor-3.3.1.tar.gz \ meld3-1.0.2.tar.gz \ supervisord
 #			 MySQL      : MySQL-5.6.36-1.el6.x86_64.rpm-bundle.tar
@@ -28,15 +29,15 @@ ajp_port=8009 # tomcat 端口
 tomcat_path=0 # tomcat 路径
 port_add=0 # tomcat 端口增加量
 user_name=yuantiaotech # 需要创建的用户名
-system_version=0 # 操作系统版本
-all_package_path=/tmp # 安装包默认放置路径，所有安装包都会到这个路径下去读取
+all_packages_path=/tmp # 安装包默认放置路径，所有安装包都会到这个路径下去读取
+IP_address=`ifconfig | grep "inet addr:"|head -n 1 | awk '{print $2}' | sed 's/addr://g'` # 当前服务器IP地址
 
 
 #==================================================================== tomcat 安装 ====================================================================
 tomcatInstall(){
 	# tomcat 安装包名
-	tomcat_package=apache-tomcat-7.0.63
-	# tomcat路径
+	tomcatFileName=apache-tomcat-7.0.63
+	# tomcat 安装路径，用户自定义路径
 	tomcat_path=$install_path/tomcat_$system_name
 	# 检查安装路径
 	if [ ! -d $install_path ]; then
@@ -47,26 +48,26 @@ tomcatInstall(){
 	fi
 
 	# 检查压缩包是否解压
-	if [ ! -d $all_package_path/$tomcat_package ]; then
-		if [ ! -f $all_package_path/$tomcat_package.tar.gz ]; then
-			echo -e "\033[31m错误：$tomcat_package.tar.gz压缩包不存在，先将压缩包拷贝至$all_package_path路径下！\033[0m"
+	if [ ! -d $all_packages_path/$tomcatFileName ]; then
+		if [ ! -f $all_packages_path/$tomcatFileName.tar.gz ]; then
+			echo -e "\033[31m错误：$tomcatFileName.tar.gz压缩包不存在，先将压缩包拷贝至$all_packages_path路径下！\033[0m"
 			return
 		else
-			tar -zxvf $all_package_path/$tomcat_package.tar.gz -C $all_package_path
+			tar -zxvf $all_packages_path/$tomcatFileName.tar.gz -C $all_packages_path
 			if [ $? -eq 0 ]; then
-				echo -e "\033[32m$tomcat_package.tar.gz 解压成功\033[0m"
+				echo -e "\033[32m$tomcatFileName.tar.gz 解压成功\033[0m"
 			else
-				echo -e "\033[31m$tomcat_package.tar.gz 解压失败\033[0m"
+				echo -e "\033[31m$tomcatFileName.tar.gz 解压失败\033[0m"
 				return
 			fi
 			sleep 3
 		fi
 	else
-		echo -e "\033[32m$tomcat_package 压缩包已经解压\033[0m"
+		echo -e "\033[32m$tomcatFileName 压缩包已经解压\033[0m"
 	fi
 
 	if [ ! -d $tomcat_path ]; then
-		cp -r $all_package_path/$tomcat_package $tomcat_path  # 拷贝并重命名
+		cp -r $all_packages_path/$tomcatFileName $tomcat_path  # 拷贝并重命名
 	else
 		echo -e "\033[32m$tomcat_path 已经存在\033[0m"
 	fi
@@ -177,14 +178,14 @@ tomcatInstall(){
 
 #==================================================================== toolsDownload安装 ====================================================================
 toolsDownloadInstall(){
-	if [ ! -d $all_package_path/toolsDownload ]; then
-		echo -e "\033[31m错误：toolsDownload文件夹不存在，先将文件夹拷贝至$all_package_path路径下！\033[0m"
+	if [ ! -d $all_packages_path/toolsDownload ]; then
+		echo -e "\033[31m错误：toolsDownload文件夹不存在，先将文件夹拷贝至$all_packages_path路径下！\033[0m"
 		return
 	else
 		#拷贝 web.xml&favicon.ico&toolsDownload 到 tomcat
-		cp $all_package_path/toolsDownload/web.xml $tomcat_path/conf/
-		cp $all_package_path/toolsDownload/favicon.ico $tomcat_path/webapps/ROOT/
-		cp -r $all_package_path/toolsDownload/toolsDownload $tomcat_path/webapps/
+		cp $all_packages_path/toolsDownload/web.xml $tomcat_path/conf/
+		cp $all_packages_path/toolsDownload/favicon.ico $tomcat_path/webapps/ROOT/
+		cp -r $all_packages_path/toolsDownload/toolsDownload $tomcat_path/webapps/
 	fi
 
 	if [ $? -eq 0  ]; then
@@ -198,19 +199,19 @@ toolsDownloadInstall(){
 geoserverInstall(){
 	if [ "$system_name" == "geoMap" ]; then
 		#拷贝 geoserver.war 到 tomcat
-		if [ ! -f $all_package_path/geoserver.war ]; then
-			echo -e "\033[31m错误：geoserver.war压缩包不存在，先将压缩包拷贝至$all_package_path路径下！\033[0m"
+		if [ ! -f $all_packages_path/geoserver.war ]; then
+			echo -e "\033[31m错误：geoserver.war压缩包不存在，先将压缩包拷贝至$all_packages_path路径下！\033[0m"
 			return
 		else
-			cp -r $all_package_path/geoserver.war $tomcat_path/webapps/
+			cp -r $all_packages_path/geoserver.war $tomcat_path/webapps/
 		fi
 	elif [ "$system_name" == "geoLayer" ]; then
 		#拷贝 geoserver 到 tomcat
-		if [ ! -d $all_package_path/geoserver ]; then
-			echo -e "\033[31m错误：geoserver文件夹不存在，先将文件夹拷贝至$all_package_path路径下！\033[0m"
+		if [ ! -d $all_packages_path/geoserver ]; then
+			echo -e "\033[31m错误：geoserver文件夹不存在，先将文件夹拷贝至$all_packages_path路径下！\033[0m"
 			return
 		else
-			cp -r $all_package_path/geoserver $tomcat_path/webapps/
+			cp -r $all_packages_path/geoserver $tomcat_path/webapps/
 		fi
 	fi
 
@@ -223,21 +224,26 @@ geoserverInstall(){
 
 #==================================================================== 超图安装 ====================================================================
 supermapInstall(){
+	# supermap压缩包名
+	supermapPackageName=supermap_iserver_7.1.2_linux64.tar.gz
+	# supermap文件夹名
+	supermapFileName=SuperMapiServer7C
+	# supermap安装路径，用户自定义路径
+	supermapInstallPath=$install_path/$supermapFileName
 	# 用于计数，判断安装是否成功
 	count=0
-	supermap_path=$install_path/SuperMapiServer7C
-	if [ ! -d $supermap_path ]; then
-		if [ ! -f supermap_iserver_7.1.2_linux64.tar.gz ]; then
-			echo -e "\033[31m错误：supermap_iserver_7.1.2_linux64.tar.gz压缩包不存在，先将压缩包拷贝至$all_package_path路径下！\033[0m"
+	if [ ! -d $supermapInstallPath ]; then
+		if [ ! -f $supermapPackageName ]; then
+			echo -e "\033[31m错误：$supermapPackageName压缩包不存在，先将压缩包拷贝至$all_packages_path路径下！\033[0m"
 			return
 		else
-			tar -zxvf $all_package_path/supermap_iserver_7.1.2_linux64.tar.gz -C $install_path
+			tar -zxvf $all_packages_path/$supermapPackageName -C $install_path
 			sleep 50
 			if [ $? -eq 0 ]; then
 				let count+=1
-				echo -e "\033[32msupermap_iserver_7.1.2_linux64.tar.gz 解压成功\033[0m"
+				echo -e "\033[32m$supermapPackageName 解压成功\033[0m"
 			else
-				echo -e "\033[31msupermap_iserver_7.1.2_linux64.tar.gz 解压失败\033[0m"
+				echo -e "\033[31m$supermapPackageName 解压失败\033[0m"
 				return
 			fi
 		fi
@@ -246,7 +252,7 @@ supermapInstall(){
 		echo -e "\033[32mSupermap 已经存在\033[0m"
 	fi
 
-	license=$supermap_path/support/SuperMap_License/Support
+	license=$supermapInstallPath/support/SuperMap_License/Support
 	echo $license
 
 	cd $license && tar -xvf aksusbd_2.4.1-i386.tar
@@ -263,9 +269,9 @@ supermapInstall(){
 		break
 	fi
 
-	libmawt1=$supermap_path/support/objectsjava/bin/libmawt.so
-	libmawt2=$supermap_path/support/jre/lib/amd64/headless/libmawt.so
-	echo $supermap_path
+	libmawt1=$supermapInstallPath/support/objectsjava/bin/libmawt.so
+	libmawt2=$supermapInstallPath/support/jre/lib/amd64/headless/libmawt.so
+	echo $supermapInstallPath
 	echo $libmawt1
 	echo $libmawt2
 
@@ -283,7 +289,7 @@ supermapInstall(){
 		echo -e "\033[31mSuperMap --------------------------- [安装失败]\033[0m"
 		return
 	fi
-	sh $supermap_path/bin/startup.sh
+	sh $supermapInstallPath/bin/startup.sh
 }
 
 #==================================================================== 安装路径选择列表 ====================================================================
@@ -294,8 +300,8 @@ installPathSelect(){
 	echo -e "\033[32m┃ [2]/home/yuantiaotech                      ┃\033[0m"
 	echo -e "\033[32m┃ [3]当前脚本路径：$script_path			   \033[0m"
 	echo -e "\033[32m┃ [B]返回主菜单                  [Q]退出安装 ┃\033[0m"
-	echo -e "\033[32m┃                                            ┃\033[0m"	
-	echo -e "\033[32m┃ *支持直接输入                              ┃\033[0m"
+	echo -e "\033[32m┃                                            ┃\033[0m"
+	echo -e "\033[32m┃ *支持直接输入，请确保路径存在！            ┃\033[0m"
 	echo -e "\033[32m┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\033[0m"
 
 	read -p "选择安装路径编号或直接输入:" val
@@ -499,11 +505,11 @@ JDKInstall(){
 	# 用于计数，判断安装是否成功
 	count=0
 	if [ ! -d $JDKPath ]; then
-		if [ ! -f $all_package_path/$JDKPackageName ]; then
-			echo -e "\033[31m错误：$JDKPackageName 压缩包不存在，先将压缩包拷贝至$all_package_path路径下！\033[0m"
+		if [ ! -f $all_packages_path/$JDKPackageName ]; then
+			echo -e "\033[31m错误：$JDKPackageName 压缩包不存在，先将压缩包拷贝至$all_packages_path路径下！\033[0m"
 			return
 		else
-			tar -zxvf $all_package_path/$JDKPackageName -C $JDKInstallPath
+			tar -zxvf $all_packages_path/$JDKPackageName -C $JDKInstallPath
 			sleep 3
 			if [ $? -eq 0 ]; then
 				let count+=1
@@ -586,7 +592,7 @@ SupervisorInstall(){
 	# supervisor 文件夹名称
 	supervisorFileName=supervisor-3.3.1
 	# 安装路径
-	installPath=/home/yuantiaotech
+	installPath=/home/yuantiaotech/supervisor
 
 	# 检查amoy路径
 	checkInstallPath
@@ -602,11 +608,11 @@ SupervisorInstall(){
 	count=0
 	# 解压
 	if [ ! -d $installPath/$meldFileName ]; then
-		if [ ! -f $all_package_path/$meldPackageName ]; then
-			echo -e "\033[31m错误：$meldPackageName压缩包不存在，先将压缩包拷贝至$all_package_path路径下！\033[0m"
+		if [ ! -f $all_packages_path/$meldPackageName ]; then
+			echo -e "\033[31m错误：$meldPackageName压缩包不存在，先将压缩包拷贝至$all_packages_path路径下！\033[0m"
 			return
 		else
-			tar -zxvf $all_package_path/$meldPackageName -C $installPath
+			tar -zxvf $all_packages_path/$meldPackageName -C $installPath
 			if [ $? -eq 0 ]; then
 				let count+=1
 				echo -e "\033[32m$meldPackageName 解压成功\033[0m"
@@ -622,11 +628,11 @@ SupervisorInstall(){
 	fi
 
 	if [ ! -d $installPath/$supervisorFileName ]; then
-		if [ ! -f $all_package_path/$supervisorPackageName ]; then
-			echo -e "\033[31m错误：$supervisorPackageName压缩包不存在，先将压缩包拷贝至$all_package_path路径下！\033[0m"
+		if [ ! -f $all_packages_path/$supervisorPackageName ]; then
+			echo -e "\033[31m错误：$supervisorPackageName压缩包不存在，先将压缩包拷贝至$all_packages_path路径下！\033[0m"
 			return
 		else
-			tar -zxvf $all_package_path/$supervisorPackageName -C $installPath
+			tar -zxvf $all_packages_path/$supervisorPackageName -C $installPath
 			if [ $? -eq 0 ]; then
 				let count+=1
 				echo -e "\033[32m$supervisorPackageName 解压成功\033[0m"
@@ -675,7 +681,7 @@ SupervisorInstall(){
 	echo "123456"|sudo -s sed -i '$afiles = /etc/supervisor/conf.d/*.conf' /etc/supervisor/supervisord.conf
 
 	# 拷贝启动脚本到/etc/init.d/
-	echo "123456"|sudo -s cp $all_package_path/supervisord /etc/init.d/
+	echo "123456"|sudo -s cp $all_packages_path/supervisord /etc/init.d/
 	# 检测java路径配置
 	javaPath=$(echo "\"\$PATH:$JAVA_HOME/bin\"")
 	echo "当前java路径：$javaPath"
@@ -716,19 +722,60 @@ SupervisorInstall(){
 	fi
 }
 
-#==================================================================== MySQL安装 ====================================================================
-MySQLInstall(){
-	# 检查旧版本
+#==================================================================== MySQL安装、卸载选项 ====================================================================
+MySQLInstallSelect(){
+	echo -e "\033[32m┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\033[0m"
+	echo -e "\033[32m┠┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈ MySQL ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┨\033[0m"
+	echo -e "\033[32m┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫\033[0m"
+	echo -e "\033[32m┃ [1]MySQL安装                  [2]MySQL卸载 ┃\033[0m"
+	echo -e "\033[32m┃ [B]返回主菜单                 [Q]退出安装  ┃\033[0m"
+	echo -e "\033[32m┃                                            ┃\033[0m"
+	echo -e "\033[32m┃ *卸载操作请谨慎使用！做好数据备份！        ┃\033[0m"
+	echo -e "\033[32m┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\033[0m"
+
+	read -p "请选择:" val
+	case $val in
+		1)	MySQLInstall
+		;;
+		2)	MySQLUninstallSelect
+		;;
+		B|b)  allInstallMenu
+		;;
+		Q|q)  exit 0
+		;;
+		*)  echo -e "\033[31m输入有误\033[0m"
+			return
+		;;
+	esac
+}
+
+#==================================================================== MySQL卸载前确认 ====================================================================
+MySQLUninstallSelect(){
+	echo -e "\033[31m当前服务器IP地址:$IP_address请确认！\033[0m"
+	read -p "注意！你正在删除MySQL，是否确定[Y/N]:" val
+	case $val in
+		Y|y)  MySQLUninstall
+		;;
+		N|n)  allInstallMenu
+		;;
+		*)	echo -e "\033[31m输入有误\033[0m"
+			return
+		;;
+	esac
+}
+
+#==================================================================== MySQL卸载 ====================================================================
+MySQLUninstall(){
 	count=0
 	oldMySQL=`rpm -qa | grep -i mysql`
 	echo -e "\033[32m已安装列表:\033[0m"
 	echo -e "\033[32m$oldMySQL\033[0m"
-	sleep 3
+	sleep 2
 	if [ ! -n "$oldMySQL" ]; then
 		echo -e "\033[32m旧版本 MySQL 已经卸载\033[0m"
 	else
 		echo -e "\033[31m关闭MySQL...\033[0m"
-		# 关闭Mysql
+		# 关闭MySQL
 		MySQLStatus=`sudo service mysql status`
 		status=`echo ${MySQLStatus%!*}`
 		if [ "$status" == "SUCCESS" ]; then
@@ -749,6 +796,9 @@ MySQLInstall(){
 		echo "123456"|sudo -s su - root -c "yum -y remove MySQL-devel-5.6.36-1.el6.x86_64"
 		echo "123456"|sudo -s su - root -c "yum -y remove MySQL-shared-compat-5.6.36-1.el6.x86_64"
 
+		# 删除MySQL路径
+		echo -e "\033[31m开始删除旧版本路径...请稍等...\033[0m"
+		sleep 1
 		echo "123456"|sudo -s rm -rf /var/lib/mysql
 		echo "123456"|sudo -s rm -rf /usr/lib64/mysql
 		echo "123456"|sudo -s rm -rf /usr/share/mysql
@@ -756,20 +806,27 @@ MySQLInstall(){
 
 		if [ $? -eq 0 ]; then
 			let count+=1
-			echo -e "\033[32mMySQL 卸载成功\033[0m"
+			echo -e "\033[32mMySQL --------------------------- [卸载成功]\033[0m"
 		else
-			echo -e "\033[31mMySQL 卸载失败\033[0m"
+			echo -e "\033[31mMySQL --------------------------- [卸载失败]\033[0m"
 			return
 		fi
 	fi
+}
 
+#==================================================================== MySQL安装 ====================================================================
+MySQLInstall(){
+	# 检查旧版本
+	MySQLUninstallSelect
+	# 计数
+	count=0
 	# 解压
-	if [ ! -d $all_package_path/MySQL-server-5.6.36-1.el6.x86_64.rpm ]; then
-		if [ ! -f $all_package_path/MySQL-5.6.36-1.el6.x86_64.rpm-bundle.tar ]; then
-			echo -e "\033[31m错误：MySQL-5.6.36-1.el6.x86_64.rpm-bundle.tar压缩包不存在，先将压缩包拷贝至$all_package_path路径下！\033[0m"
+	if [ ! -d $all_packages_path/MySQL-server-5.6.36-1.el6.x86_64.rpm ]; then
+		if [ ! -f $all_packages_path/MySQL-5.6.36-1.el6.x86_64.rpm-bundle.tar ]; then
+			echo -e "\033[31m错误：MySQL-5.6.36-1.el6.x86_64.rpm-bundle.tar压缩包不存在，先将压缩包拷贝至$all_packages_path路径下！\033[0m"
 			return
 		else
-			tar xvf $all_package_path/MySQL-5.6.36-1.el6.x86_64.rpm-bundle.tar -C $all_package_path
+			tar xvf $all_packages_path/MySQL-5.6.36-1.el6.x86_64.rpm-bundle.tar -C $all_packages_path
 			if [ $? -eq 0 ]; then
 				let count+=1
 				echo -e "\033[32mMySQL-5.6.36-1.el6.x86_64.rpm-bundle.tar 解压成功\033[0m"
@@ -784,13 +841,13 @@ MySQLInstall(){
 	fi
 	echo -e "\033[32m开始安装 MySQL\033[0m"
 	sleep 1
-	echo "123456"|sudo -s rpm -ivh --nodeps --force $all_package_path/MySQL-client-5.6.36-1.el6.x86_64.rpm
-	echo "123456"|sudo -s rpm -ivh --nodeps --force $all_package_path/MySQL-devel-5.6.36-1.el6.x86_64.rpm
-	echo "123456"|sudo -s rpm -ivh --nodeps --force $all_package_path/MySQL-embedded-5.6.36-1.el6.x86_64.rpm
-	echo "123456"|sudo -s rpm -ivh --nodeps --force $all_package_path/MySQL-server-5.6.36-1.el6.x86_64.rpm
-	echo "123456"|sudo -s rpm -ivh --nodeps --force $all_package_path/MySQL-shared-5.6.36-1.el6.x86_64.rpm
-	echo "123456"|sudo -s rpm -ivh --nodeps --force $all_package_path/MySQL-shared-compat-5.6.36-1.el6.x86_64.rpm
-	echo "123456"|sudo -s rpm -ivh --nodeps --force $all_package_path/MySQL-test-5.6.36-1.el6.x86_64.rpm
+	echo "123456"|sudo -s rpm -ivh --nodeps --force $all_packages_path/MySQL-client-5.6.36-1.el6.x86_64.rpm
+	echo "123456"|sudo -s rpm -ivh --nodeps --force $all_packages_path/MySQL-devel-5.6.36-1.el6.x86_64.rpm
+	echo "123456"|sudo -s rpm -ivh --nodeps --force $all_packages_path/MySQL-embedded-5.6.36-1.el6.x86_64.rpm
+	echo "123456"|sudo -s rpm -ivh --nodeps --force $all_packages_path/MySQL-server-5.6.36-1.el6.x86_64.rpm
+	echo "123456"|sudo -s rpm -ivh --nodeps --force $all_packages_path/MySQL-shared-5.6.36-1.el6.x86_64.rpm
+	echo "123456"|sudo -s rpm -ivh --nodeps --force $all_packages_path/MySQL-shared-compat-5.6.36-1.el6.x86_64.rpm
+	echo "123456"|sudo -s rpm -ivh --nodeps --force $all_packages_path/MySQL-test-5.6.36-1.el6.x86_64.rpm
 	if [ $? -eq 0 ]; then
 		let count+=1
 		echo -e "\033[32mMySQL 压缩包安装完成\033[0m"
@@ -870,7 +927,7 @@ EOF
 	fi
 }
 
-#==================================================================== Oracle安装配置卸载选项 ====================================================================
+#==================================================================== Oracle安装、配置、卸载选项 ====================================================================
 OracleInstallSelect(){
 	echo -e "\033[32m┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\033[0m"
 	echo -e "\033[32m┠┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈ Oracle ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┨\033[0m"
@@ -880,6 +937,7 @@ OracleInstallSelect(){
 	echo -e "\033[32m┃ [B]返回主菜单                [Q]退出安装   ┃\033[0m"
 	echo -e "\033[32m┃                                            ┃\033[0m"
 	echo -e "\033[32m┃ *完整安装Oracle需包含[1][2]两步            ┃\033[0m"
+	echo -e "\033[32m┃ *卸载操作请谨慎使用！做好数据备份！        ┃\033[0m"
 	echo -e "\033[32m┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\033[0m"
 
 	read -p "请选择:" val
@@ -904,16 +962,16 @@ OracleInstallSelect(){
 OracleInstall(){
 	# 卸载Oracle
 	if [ "$ORACLE_HOME" != "" ]; then
-		OracleUninstall
+		OracleUninstallSelect
 	fi
 	
 	# 解压依赖包
-	if [ ! -d $all_package_path/centos6.8_oracle11gPackages ]; then
-		if [ ! -f $all_package_path/centos6.8_oracle11gPackages.tar.gz ]; then
-			echo -e "\033[31m错误：centos6.8_oracle11gPackages.tar压缩包不存在，先将压缩包拷贝至$all_package_path路径下！\033[0m"
+	if [ ! -d $all_packages_path/centos6.8_oracle11gPackages ]; then
+		if [ ! -f $all_packages_path/centos6.8_oracle11gPackages.tar.gz ]; then
+			echo -e "\033[31m错误：centos6.8_oracle11gPackages.tar压缩包不存在，先将压缩包拷贝至$all_packages_path路径下！\033[0m"
 			return
 		else
-			tar zxvf $all_package_path/centos6.8_oracle11gPackages.tar.gz -C $all_package_path
+			tar zxvf $all_packages_path/centos6.8_oracle11gPackages.tar.gz -C $all_packages_path
 			if [ $? -eq 0 ]; then
 				echo -e "\033[32mcentos6.8_oracle11gPackages.tar 解压成功\033[0m"
 			else
@@ -925,8 +983,8 @@ OracleInstall(){
 	else
 		echo -e "\033[32mmcentos6.8_oracle11gPackages 已经存在\033[0m"
 	fi
-	echo "123456"|sudo -s rpm -ivh $all_package_path/centos6.8_oracle11gPackages/part1/*.rpm --force --nodeps
-	echo "123456"|sudo -s rpm -ivh $all_package_path/centos6.8_oracle11gPackages/part2_xhost/*.rpm --force --nodeps
+	echo "123456"|sudo -s rpm -ivh $all_packages_path/centos6.8_oracle11gPackages/part1/*.rpm --force --nodeps
+	echo "123456"|sudo -s rpm -ivh $all_packages_path/centos6.8_oracle11gPackages/part2_xhost/*.rpm --force --nodeps
 
 	# 修改/etc/hosts
 	addHostName
@@ -1082,13 +1140,13 @@ OracleInstall(){
 	fi
 	
 	# 解压安装包
-	if [ ! -d $all_package_path/database ]; then
-		if [ ! -f $all_package_path/centos6.8_oracle11gPackages.tar.gz ]; then
-			echo -e "\033[31m错误：centos6.8_oracle11gPackages.tar压缩包不存在，先将压缩包拷贝至$all_package_path路径下！\033[0m"
+	if [ ! -d $all_packages_path/database ]; then
+		if [ ! -f $all_packages_path/centos6.8_oracle11gPackages.tar.gz ]; then
+			echo -e "\033[31m错误：centos6.8_oracle11gPackages.tar压缩包不存在，先将压缩包拷贝至$all_packages_path路径下！\033[0m"
 			return
 		else
-			unzip $all_package_path/linux.x64_11gR2_database_1of2.zip -d $all_package_path
-			unzip $all_package_path/linux.x64_11gR2_database_2of2.zip -d $all_package_path
+			unzip $all_packages_path/linux.x64_11gR2_database_1of2.zip -d $all_packages_path
+			unzip $all_packages_path/linux.x64_11gR2_database_2of2.zip -d $all_packages_path
 			if [ $? -eq 0 ]; then
 				echo -e "\033[32mOracle 安装包解压成功\033[0m"
 			else
@@ -1115,7 +1173,7 @@ OracleInstall(){
 	check_user=`whoami`  
     if [ "$check_user" != "root" ]  
     then
-		cd $all_package_path/database
+		cd $all_packages_path/database
 		./runInstaller
 	else
 		echo -e "\033[31m当前为root用户，用非root用户重新执行脚本。\033[0m"
@@ -1188,9 +1246,10 @@ EOF
 	fi
 }
 
-#==================================================================== Oracle卸载确认 ====================================================================
+#==================================================================== Oracle卸载前确认 ====================================================================
 OracleUninstallSelect(){
-	read -p "正在删除Oracle，是否确定[Y/N]:" val
+	echo -e "\033[31m当前服务器IP地址:$IP_address请确认！\033[0m"
+	read -p "注意！你正在删除Oracle，是否确定[Y/N]:" val
 	case $val in
 		Y|y)  OracleUninstall
 		;;
@@ -1372,12 +1431,12 @@ ActiveMQInstall(){
 	# 检查安装路径
 	checkInstallPath
 	# 解压依赖包
-	if [ ! -d $all_package_path/$ActiveMQFileName ]; then
-		if [ ! -f $all_package_path/$ActiveMQPackageName ]; then
-			echo -e "\033[31m错误：$ActiveMQPackageName压缩包不存在，先将压缩包拷贝至$all_package_path路径下！\033[0m"
+	if [ ! -d $all_packages_path/$ActiveMQFileName ]; then
+		if [ ! -f $all_packages_path/$ActiveMQPackageName ]; then
+			echo -e "\033[31m错误：$ActiveMQPackageName压缩包不存在，先将压缩包拷贝至$all_packages_path路径下！\033[0m"
 			return
 		else
-			tar zxvf $all_package_path/$ActiveMQPackageName -C $ActiveMQinstallPath
+			tar zxvf $all_packages_path/$ActiveMQPackageName -C $ActiveMQinstallPath
 			if [ $? -eq 0 ]; then
 				echo -e "\033[32m$ActiveMQPackageName 解压成功\033[0m"
 				let count+=1
@@ -1475,7 +1534,7 @@ allInstallMenu(){
 		;;
 		4)	SupervisorInstall
 		;;
-		5)	MySQLInstall
+		5)	MySQLInstallSelect
 		;;
 		6)	OracleInstallSelect
 		;;
