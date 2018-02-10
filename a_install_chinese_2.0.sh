@@ -864,14 +864,51 @@ MySQLInstall(){
 		echo "123456"|sudo -s sed -i '$adatadir=/var/lib/mysql' /home/yuantiaotech/my.cnf
 		echo "123456"|sudo -s sed -i '$asocket=/var/lib/mysql/mysql.sock' /home/yuantiaotech/my.cnf
 		echo "123456"|sudo -s sed -i '$auser=mysql' /home/yuantiaotech/my.cnf
+		echo "123456"|sudo -s sed -i '$aport=3306' /home/yuantiaotech/my.cnf
 		echo "123456"|sudo -s sed -i '$alower_case_table_names=1' /home/yuantiaotech/my.cnf
-		echo "123456"|sudo -s sed -i '$acharacter_set_server=utf8' /home/yuantiaotech/my.cnf
-		echo "123456"|sudo -s sed -i '$a# Disabling symbolic-links is recommended to prevent assorted security risks' /home/yuantiaotech/my.cnf
+		echo "123456"|sudo -s sed -i '$acharacter-set-server=utf8' /home/yuantiaotech/my.cnf
 		echo "123456"|sudo -s sed -i '$asymbolic-links=0' /home/yuantiaotech/my.cnf
 		echo "123456"|sudo -s sed -i '$askip-name-resolve' /home/yuantiaotech/my.cnf
+		echo "123456"|sudo -s sed -i '$anet_write_timeout=600' /home/yuantiaotech/my.cnf
+		echo "123456"|sudo -s sed -i '$await_timeout=31536000' /home/yuantiaotech/my.cnf
+		echo "123456"|sudo -s sed -i '$ainteractive_timeout=31536000' /home/yuantiaotech/my.cnf
+		echo "123456"|sudo -s sed -i '$acollation-server=utf8_general_ci' /home/yuantiaotech/my.cnf
+		echo "123456"|sudo -s sed -i '$askip-external-locking' /home/yuantiaotech/my.cnf
+		echo "123456"|sudo -s sed -i '$akey_buffer=512M' /home/yuantiaotech/my.cnf
+		echo "123456"|sudo -s sed -i '$amax_allowed_packet=16M' /home/yuantiaotech/my.cnf
+		echo "123456"|sudo -s sed -i '$athread_stack=192K' /home/yuantiaotech/my.cnf
+		echo "123456"|sudo -s sed -i '$athread_cache_size=8' /home/yuantiaotech/my.cnf
+		echo "123456"|sudo -s sed -i '$aread_rnd_buffer_size=2560M' /home/yuantiaotech/my.cnf
+		echo "123456"|sudo -s sed -i '$asort_buffer_size=2560M' /home/yuantiaotech/my.cnf
+		echo "123456"|sudo -s sed -i '$ajoin_buffer_size=2560M' /home/yuantiaotech/my.cnf
+		echo "123456"|sudo -s sed -i '$ainnodb_buffer_pool_size=6G' /home/yuantiaotech/my.cnf
+		echo "123456"|sudo -s sed -i '$aread_buffer_size=2560M' /home/yuantiaotech/my.cnf
+		echo "123456"|sudo -s sed -i '$amyisam-recover=BACKUP' /home/yuantiaotech/my.cnf
+		echo "123456"|sudo -s sed -i '$atmp_table_size=512M' /home/yuantiaotech/my.cnf
+		echo "123456"|sudo -s sed -i '$amax_connections=1500' /home/yuantiaotech/my.cnf
+		echo "123456"|sudo -s sed -i '$aquery_cache_limit=256M' /home/yuantiaotech/my.cnf
+		echo "123456"|sudo -s sed -i '$aquery_cache_size=1024M' /home/yuantiaotech/my.cnf
+		echo "123456"|sudo -s sed -i '$aexpire_logs_days=10' /home/yuantiaotech/my.cnf
+		echo "123456"|sudo -s sed -i '$amax_binlog_size=100M' /home/yuantiaotech/my.cnf
+		
+		echo "123456"|sudo -s sed -i '$a[client]' /home/yuantiaotech/my.cnf
+		echo "123456"|sudo -s sed -i '$aport=3306' /home/yuantiaotech/my.cnf
+		echo "123456"|sudo -s sed -i '$adefault-character-set=utf8' /home/yuantiaotech/my.cnf
+
 		echo "123456"|sudo -s sed -i '$a[mysqld_safe]' /home/yuantiaotech/my.cnf
 		echo "123456"|sudo -s sed -i '$alog-error=/var/log/mysqld.log' /home/yuantiaotech/my.cnf
-		echo "123456"|sudo -s sed -i '$apid-file=/var/run/mysqld/mysqld.pid' /home/yuantiaotech/my.cnf
+		echo "123456"|sudo -s sed -i '$asocket=/var/lib/mysql/mysql.sock' /home/yuantiaotech/my.cnf
+		echo "123456"|sudo -s sed -i '$apid-file=/var/lib/mysql/mysql.pid' /home/yuantiaotech/my.cnf
+		echo "123456"|sudo -s sed -i '$anice=0' /home/yuantiaotech/my.cnf
+
+		echo "123456"|sudo -s sed -i '$a[mysqldump]' /home/yuantiaotech/my.cnf
+		echo "123456"|sudo -s sed -i '$aquick' /home/yuantiaotech/my.cnf
+		echo "123456"|sudo -s sed -i '$aquote-names' /home/yuantiaotech/my.cnf
+		echo "123456"|sudo -s sed -i '$amax_allowed_packet=1024M' /home/yuantiaotech/my.cnf
+
+		echo "123456"|sudo -s sed -i '$a[mysql]' /home/yuantiaotech/my.cnf
+		echo "123456"|sudo -s sed -i '$a[isamchk]' /home/yuantiaotech/my.cnf
+		echo "123456"|sudo -s sed -i '$akey_buffer=16M' /home/yuantiaotech/my.cnf
 		echo "123456"|sudo -s mv /home/yuantiaotech/my.cnf /etc
 		echo "123456"|sudo -s chmod 644 /etc/my.cnf
 
