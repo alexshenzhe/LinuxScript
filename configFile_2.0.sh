@@ -5,7 +5,7 @@
 # 版    本 : 1.1
 # 更新时间 : 2018/01/31
 # 描    述 : 本脚本用于在态势2.0部署过程中对两个tomcat进行相应的配置。
-# 			 一般将tomcat都部署在/home/yuantiaotech/project/index目录下，部署之前我们需要手动将tomcat的名称分别命名成tomcat_aaron以及tomcat_geoLayer，
+# 			 一般将tomcat都部署在/home/yuantiaotech/project/aaron目录下，部署之前我们需要手动将tomcat的名称分别命名成tomcat_aaron以及tomcat_geoLayer，
 #			 然后将tomcat放置在/tmp路径下，随后修改完毕脚本【手动修改】内容以后执行脚本即可，脚本会自行将tomcat需要修改IP及数据库名的内容以及端口自动完成修改，
 #			 脚本支持自动生成supervisor下的conf文件。
 
@@ -19,7 +19,7 @@ aaron_db_name=aaron1.1.1.2				# 应用aaron数据库名称
 all_packages_path=/tmp					# 安装包默认放置路径，所有安装包都会到这个路径下去读取
 aaron_name=tomcat_aaron         		# tomcat文件夹名称
 geoLayer_name=tomcat_geoLayer			# geoserver文件夹名称
-insatll_path=/home/yuantiaotech			# 安装路径
+insatll_path=/home/yuantiaotech/aaron	# 安装路径
 # tomcat 配置文件路径
 filePath_tomcat=$insatll_path/$aaron_name/webapps/pf.web.runtime/configuration/datasource.xml
 # geoserver 配置文件路径
@@ -260,8 +260,25 @@ configSupervisorConf(){
 	fi
 }
 
+# 检查安装路径是否存在，不存在则创建
+checkInstallPath(){
+	# 检查路径
+	if [ ! -d $insatll_path ]; then
+	    mkdir $insatll_path
+	    if [ $? -eq 0 ]; then
+			echo -e "\033[32m$insatll_path 路径创建成功\033[0m"
+		else
+			echo -e "\033[31m$insatll_path 路径创建失败\033[0m"
+			exit 0
+		fi
+	else
+	    echo -e "\033[32m$insatll_path 路径已经存在\033[0m"
+	fi
+}
+
 # ================================================================ 主函数 ================================================================
 menu(){
+	checkInstallPath
 	configTomcatAaron
 	configTomcatGeo
 }
