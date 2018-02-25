@@ -2,32 +2,33 @@
 
 # 文 件 名 : a_install_chinese2.0.sh
 # 作    者 : 沈喆
-# 版    本 : 1.1
-# 更新时间 : 2018/01/26
+# 创建时间 : 2017/04/13
+# 版 本 号 : 2.1.1
+# 更新时间 : 2018/02/25
 # 描    述 : 这个脚本用于部署态势2.0过程中安装JDK、Supermap、Supervisor、MySQL、Oracle、Tomcat、toolsDownload、ActiveMQ，后续增不增加就看我心情了。
 #			 脚本默认会配置tomcat的默认内存(512~1024m)及报表，新增加了创建或删除linux用户以及关闭防火墙及SELINUX，自动将ActiveMQ添加到系统服务开机自启进行管理，
 #			 根据提示操作即可。
+#			 建议在yauntiaotech用户下运行脚本。
 # 依 赖 包 : JDK        : jdk-7u80-linux-x64.tar.gz
-#			 Supervisor : supervisor-3.3.1.tar.gz \ meld3-1.0.2.tar.gz \ supervisord
+#			 Supervisor : supervisor-3.3.1.tar.gz、meld3-1.0.2.tar.gz、supervisord
 #			 MySQL      : MySQL-5.6.36-1.el6.x86_64.rpm-bundle.tar
 #			 Tomcat     : apache-tomcat-7.0.63.tar.gz
 #			 Supermap   : supermap_iserver_7.1.2_linux64.tar.gz
-#			 Oracle     : linux.x64_11gR2_database_1of2.zip \ linux.x64_11gR2_database_2of2.zip \ centos6.8_oracle11grpm.tar.gz
+#			 Oracle     : linux.x64_11gR2_database_1of2.zip、linux.x64_11gR2_database_2of2.zip、centos6.8_oracle11grpm.tar.gz
 #			 ActiveMQ   : apache-activemq-5.14.2-bin.tar.gz
-#			 以上安装包可以从150服务器的/项目部文档/技术支持/部署常用软件/脚本/a_install文件夹下获取
+#
+#			 以上安装包可以从ftp://192.168.0.150/项目部文档/技术支持/部署常用软件/脚本/a_install文件夹下获取(使用support/123456登录)。
 
 # 系统变量
-system_name=0 # 系统名称 例如 index/monitor/guide/...
-install_path=0 # 安装路径 例如 /home/yuantiaotech/project
-database_name=0 # 数据库名称 例如 indexmonitor/monitor/guide/...
+system_name=0 # 系统名称 例如 index、monitor、guide...
 script_path=$(cd "$(dirname "$0")"; pwd) # 当前脚本路径
 server_port=0 # dataserver 端口
 shutdow_port=8005 # tomcat 端口
 http_port=8081 # tomcat 端口
 redirect_port=8443 # tomcat 端口
 ajp_port=8009 # tomcat 端口
-tomcat_path=0 # tomcat 路径
-port_add=0 # tomcat 端口增加量
+tomcat_install_path=0 # tomcat安装路径，用户选择或输入
+tomcat_file_path=0 # tomcat 文件夹路径
 user_name=yuantiaotech # 需要创建的用户名
 all_packages_path=/tmp # 安装包默认放置路径，所有安装包都会到这个路径下去读取
 IP_address=`ifconfig | grep "inet addr:"|head -n 1 | awk '{print $2}' | sed 's/addr://g'` # 当前服务器IP地址
@@ -38,14 +39,9 @@ tomcatInstall(){
 	# tomcat 安装包名
 	tomcatFileName=apache-tomcat-7.0.63
 	# tomcat 安装路径，用户自定义路径
-	tomcat_path=$install_path/tomcat_$system_name
+	tomcat_file_path=$tomcat_install_path/tomcat_$system_name
 	# 检查安装路径
-	if [ ! -d $install_path ]; then
-	    mkdir $install_path
-	    echo -e "\033[32m$install_path 路径创建成功\033[0m"
-	else
-	    echo -e "\033[32m$install_path 路径已经存在\033[0m"
-	fi
+	checkInstallPath $tomcat_install_path
 
 	# 检查压缩包是否解压
 	if [ ! -d $all_packages_path/$tomcatFileName ]; then
@@ -66,10 +62,10 @@ tomcatInstall(){
 		echo -e "\033[32m$tomcatFileName 压缩包已经解压\033[0m"
 	fi
 
-	if [ ! -d $tomcat_path ]; then
-		cp -r $all_packages_path/$tomcatFileName $tomcat_path  # 拷贝并重命名
+	if [ ! -d $tomcat_file_path ]; then
+		cp -r $all_packages_path/$tomcatFileName $tomcat_file_path  # 拷贝并重命名
 	else
-		echo -e "\033[32m$tomcat_path 已经存在\033[0m"
+		echo -e "\033[32m$tomcat_file_path 已经存在\033[0m"
 	fi
 
 	# 用于计数，判断安装是否成功
@@ -82,9 +78,9 @@ tomcatInstall(){
 	else
 	    echo -e "\033[32m/etc/profile 中配置 tomcat_$system_name"
 		echo "123456"|sudo -s sed -i '$a##########'$(echo $system_name)' tomcat##########' /etc/profile
-		echo "123456"|sudo -s sed -i '$aTOMCAT_HOME_'$(echo $system_name)'='$(echo $tomcat_path)'' /etc/profile
-		echo "123456"|sudo -s sed -i '$aCATALINA_HOME_'$(echo $system_name)'='$(echo $tomcat_path)'' /etc/profile
-		echo "123456"|sudo -s sed -i '$aCATALINA_BASE_'$(echo $system_name)'='$(echo $tomcat_path)'' /etc/profile
+		echo "123456"|sudo -s sed -i '$aTOMCAT_HOME_'$(echo $system_name)'='$(echo $tomcat_file_path)'' /etc/profile
+		echo "123456"|sudo -s sed -i '$aCATALINA_HOME_'$(echo $system_name)'='$(echo $tomcat_file_path)'' /etc/profile
+		echo "123456"|sudo -s sed -i '$aCATALINA_BASE_'$(echo $system_name)'='$(echo $tomcat_file_path)'' /etc/profile
 		echo "123456"|sudo -s sed -i '$aexport TOMCAT_HOME_'$(echo $system_name)'  CATALINA_HOME_'$(echo $system_name)'  CATALINA_BASE_'$(echo $system_name)'' /etc/profile
 		echo "123456"|sudo -s sed -i '$a##########'$(echo $system_name)' tomcat##########' /etc/profile
 
@@ -98,43 +94,43 @@ tomcatInstall(){
 	fi
 	sleep 1
 
-	# 配置 $tomcat_path/bin/catalina.sh 的 CATALINA_HOME 
-	if cat $tomcat_path/bin/catalina.sh | grep CATALINA_HOME_$system_name >/dev/null 
+	# 配置 $tomcat_file_path/bin/catalina.sh 的 CATALINA_HOME 
+	if cat $tomcat_file_path/bin/catalina.sh | grep CATALINA_HOME_$system_name >/dev/null 
 		then
 		let count+=1
-	    echo -e "\033[32m$tomcat_path/bin/catalina.sh TOMCAT_HOME_$system_name 已经配置\033[0m"
+	    echo -e "\033[32m$tomcat_file_path/bin/catalina.sh TOMCAT_HOME_$system_name 已经配置\033[0m"
 	else
-		sed -i "s/CATALINA_HOME/CATALINA_HOME_$system_name/g" $tomcat_path/bin/catalina.sh
-		if cat $tomcat_path/bin/catalina.sh | grep CATALINA_HOME_$system_name >/dev/null
+		sed -i "s/CATALINA_HOME/CATALINA_HOME_$system_name/g" $tomcat_file_path/bin/catalina.sh
+		if cat $tomcat_file_path/bin/catalina.sh | grep CATALINA_HOME_$system_name >/dev/null
 			then
 			let count+=1
-			echo -e "\033[32m$tomcat_path/bin/catalina.sh CATALINA_HOME_$system_name 配置成功\033[0m"
+			echo -e "\033[32m$tomcat_file_path/bin/catalina.sh CATALINA_HOME_$system_name 配置成功\033[0m"
 		else
-			echo -e "\033[31m$tomcat_path/bin/catalina.sh CATALINA_HOME_$system_name 配置失败\033[0m"
+			echo -e "\033[31m$tomcat_file_path/bin/catalina.sh CATALINA_HOME_$system_name 配置失败\033[0m"
 		fi
 	fi
 	sleep 1
 
-	# 配置 $tomcat_path/bin/catalina.sh 的 CATALINA_BASE 
-	if cat $tomcat_path/bin/catalina.sh | grep CATALINA_BASE_$system_name >/dev/null 
+	# 配置 $tomcat_file_path/bin/catalina.sh 的 CATALINA_BASE 
+	if cat $tomcat_file_path/bin/catalina.sh | grep CATALINA_BASE_$system_name >/dev/null 
 		then
 		let count+=1
-	    echo -e "\033[32m$tomcat_path/bin/catalina.sh TOMCAT_BASE_$system_name 已经配置\033[0m"
+	    echo -e "\033[32m$tomcat_file_path/bin/catalina.sh TOMCAT_BASE_$system_name 已经配置\033[0m"
 	else
-		sed -i "s/CATALINA_BASE/CATALINA_BASE_$system_name/g" $tomcat_path/bin/catalina.sh
-		if cat $tomcat_path/bin/catalina.sh | grep CATALINA_BASE_$system_name >/dev/null
+		sed -i "s/CATALINA_BASE/CATALINA_BASE_$system_name/g" $tomcat_file_path/bin/catalina.sh
+		if cat $tomcat_file_path/bin/catalina.sh | grep CATALINA_BASE_$system_name >/dev/null
 			then
 			let count+=1
-			echo -e "\033[32m$tomcat_path/bin/catalina.sh CATALINA_BASE_$system_name 配置成功\033[0m"
+			echo -e "\033[32m$tomcat_file_path/bin/catalina.sh CATALINA_BASE_$system_name 配置成功\033[0m"
 		else
-			echo -e "\033[31m$tomcat_path/bin/catalina.sh CATALINA_BASE_$system_name 配置失败\033[0m"
+			echo -e "\033[31m$tomcat_file_path/bin/catalina.sh CATALINA_BASE_$system_name 配置失败\033[0m"
 		fi
 	fi
 	sleep 1
 
 	# 配置tomcat默认内存大小以及报表编码等
-	sed -i "1 aJAVA_OPTS='-server -Xms512m -Xmx1024m -XX:PermSize=64m -XX:MaxPermSize=256m -Djava.awt.headless=true -DFile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8'" $tomcat_path/bin/catalina.sh
-	sed -i "1 aexport LC_ALL=\"zh_CN.UTF-8\"" $tomcat_path/bin/catalina.sh
+	sed -i "1 aJAVA_OPTS='-server -Xms512m -Xmx1024m -XX:PermSize=64m -XX:MaxPermSize=256m -Djava.awt.headless=true -DFile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8'" $tomcat_file_path/bin/catalina.sh
+	sed -i "1 aexport LC_ALL=\"zh_CN.UTF-8\"" $tomcat_file_path/bin/catalina.sh
 
 	if [ $? -eq 0  ]; then
 		let count+=1
@@ -145,10 +141,10 @@ tomcatInstall(){
 	sleep 1
 	
 	# tomcat 端口配置
-	sed -i "s/8005/$shutdow_port/g" $tomcat_path/conf/server.xml
-	sed -i "s/8081/$http_port/g" $tomcat_path/conf/server.xml
-	sed -i "s/8443/$redirect_port/g" $tomcat_path/conf/server.xml
-	sed -i "s/8009/$ajp_port/g" $tomcat_path/conf/server.xml
+	sed -i "s/8005/$shutdow_port/g" $tomcat_file_path/conf/server.xml
+	sed -i "s/8081/$http_port/g" $tomcat_file_path/conf/server.xml
+	sed -i "s/8443/$redirect_port/g" $tomcat_file_path/conf/server.xml
+	sed -i "s/8009/$ajp_port/g" $tomcat_file_path/conf/server.xml
 
 	if [ $? -eq 0  ]; then
 		let count+=1
@@ -183,9 +179,9 @@ toolsDownloadInstall(){
 		return
 	else
 		#拷贝 web.xml&favicon.ico&toolsDownload 到 tomcat
-		cp $all_packages_path/toolsDownload/web.xml $tomcat_path/conf/
-		cp $all_packages_path/toolsDownload/favicon.ico $tomcat_path/webapps/ROOT/
-		cp -r $all_packages_path/toolsDownload/toolsDownload $tomcat_path/webapps/
+		cp $all_packages_path/toolsDownload/web.xml $tomcat_file_path/conf/
+		cp $all_packages_path/toolsDownload/favicon.ico $tomcat_file_path/webapps/ROOT/
+		cp -r $all_packages_path/toolsDownload/toolsDownload $tomcat_file_path/webapps/
 	fi
 
 	if [ $? -eq 0  ]; then
@@ -203,7 +199,7 @@ geoserverInstall(){
 			echo -e "\033[31m错误：geoserver.war压缩包不存在，先将压缩包拷贝至$all_packages_path路径下！\033[0m"
 			return
 		else
-			cp -r $all_packages_path/geoserver.war $tomcat_path/webapps/
+			cp -r $all_packages_path/geoserver.war $tomcat_file_path/webapps/
 		fi
 	elif [ "$system_name" == "geoLayer" ]; then
 		#拷贝 geoserver 到 tomcat
@@ -211,7 +207,7 @@ geoserverInstall(){
 			echo -e "\033[31m错误：geoserver文件夹不存在，先将文件夹拷贝至$all_packages_path路径下！\033[0m"
 			return
 		else
-			cp -r $all_packages_path/geoserver $tomcat_path/webapps/
+			cp -r $all_packages_path/geoserver $tomcat_file_path/webapps/
 		fi
 	fi
 
@@ -224,20 +220,22 @@ geoserverInstall(){
 
 #==================================================================== 超图安装 ====================================================================
 supermapInstall(){
-	# supermap压缩包名
+	# supermap 安装路径
+	supermapInstallPath=/home/yuantiaotech
+	# supermap 压缩包名
 	supermapPackageName=supermap_iserver_7.1.2_linux64.tar.gz
-	# supermap文件夹名
+	# supermap 文件夹名
 	supermapFileName=SuperMapiServer7C
-	# supermap安装路径，用户自定义路径
-	supermapInstallPath=$install_path/$supermapFileName
+	# supermap 文件夹路径
+	supermapFilePath=$supermapInstallPath/$supermapFileName
 	# 用于计数，判断安装是否成功
 	count=0
-	if [ ! -d $supermapInstallPath ]; then
+	if [ ! -d $supermapFilePath ]; then
 		if [ ! -f $supermapPackageName ]; then
 			echo -e "\033[31m错误：$supermapPackageName压缩包不存在，先将压缩包拷贝至$all_packages_path路径下！\033[0m"
 			return
 		else
-			tar -zxvf $all_packages_path/$supermapPackageName -C $install_path
+			tar -zxvf $all_packages_path/$supermapPackageName -C $supermapInstallPath
 			sleep 50
 			if [ $? -eq 0 ]; then
 				let count+=1
@@ -252,7 +250,7 @@ supermapInstall(){
 		echo -e "\033[32mSupermap 已经存在\033[0m"
 	fi
 
-	license=$supermapInstallPath/support/SuperMap_License/Support
+	license=$supermapFilePath/support/SuperMap_License/Support
 	echo $license
 
 	cd $license && tar -xvf aksusbd_2.4.1-i386.tar
@@ -269,9 +267,9 @@ supermapInstall(){
 		break
 	fi
 
-	libmawt1=$supermapInstallPath/support/objectsjava/bin/libmawt.so
-	libmawt2=$supermapInstallPath/support/jre/lib/amd64/headless/libmawt.so
-	echo $supermapInstallPath
+	libmawt1=$supermapFilePath/support/objectsjava/bin/libmawt.so
+	libmawt2=$supermapFilePath/support/jre/lib/amd64/headless/libmawt.so
+	echo $supermapFilePath
 	echo $libmawt1
 	echo $libmawt2
 
@@ -289,7 +287,7 @@ supermapInstall(){
 		echo -e "\033[31mSuperMap --------------------------- [安装失败]\033[0m"
 		return
 	fi
-	sh $supermapInstallPath/bin/startup.sh
+	sh $supermapFilePath/bin/startup.sh
 }
 
 #==================================================================== 安装路径选择列表 ====================================================================
@@ -297,8 +295,8 @@ installPathSelect(){
 	echo -e "\033[32m┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\033[0m"
 	echo -e "\033[32m┠┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈ 选择安装路径 ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┨\033[0m"
 	echo -e "\033[32m┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫\033[0m"
-	echo -e "\033[32m┃ [2]/home/yuantiaotech                      ┃\033[0m"
-	echo -e "\033[32m┃ [3]当前脚本路径：$script_path			   \033[0m"
+	echo -e "\033[32m┃ [1]/home/yuantiaotech                      ┃\033[0m"
+	echo -e "\033[32m┃ [2]当前脚本路径：$script_path			   \033[0m"
 	echo -e "\033[32m┃ [B]返回主菜单                  [Q]退出安装 ┃\033[0m"
 	echo -e "\033[32m┃                                            ┃\033[0m"
 	echo -e "\033[32m┃ *支持直接输入，请确保路径存在！            ┃\033[0m"
@@ -306,27 +304,25 @@ installPathSelect(){
 
 	read -p "选择安装路径编号或直接输入:" val
 	case $val in
-		1)	install_path=/home/yuantiaotech/project/$system_name
-		;;
-		2)  install_path=/home/yuantiaotech
+		1)  tomcat_install_path=/home/yuantiaotech
 		;; 
-		3)  install_path=$script_path
+		2)  tomcat_install_path=$script_path
 		;;
 		B|b)  allInstallMenu
 		;;
 		Q|q)  exit 0
 		;;
-		*)	install_path=$val
+		*)	tomcat_install_path=$val
 		;;
 	esac
 }
 
 #==================================================================== 端口变化 ====================================================================
 portChange(){
-	shutdow_port=$(($port_add+8005))
-	http_port=$(($port_add+8081))
-	redirect_port=$(($port_add+8443))
-	ajp_port=$(($port_add+8009))
+	shutdow_port=$(($1+8005))
+	http_port=$(($1+8081))
+	redirect_port=$(($1+8443))
+	ajp_port=$(($1+8009))
 }
 
 #==================================================================== tomcat名称选择 ====================================================================
@@ -344,25 +340,21 @@ tomcatInstallSelect(){
 	read -p "选择安装的系统名称编号或直接输入:" val
 	case $val in
 		1)  system_name=geoMap
-			port_add=18
-			portChange
+			portChange 18
 			installPathSelect
 			tomcatInstall
 		;;
 		2)  system_name=geoLayer
-			port_add=7
-			portChange
+			portChange 7
 			installPathSelect
 			tomcatInstall
 		;;
 		3)  system_name=toolsDownload
-			port_add=17
-			portChange
+			portChange 17
 			installPathSelect
 			tomcatInstall
 		;;
 		4)  system_name=SuperMap
-			installPathSelect
 			supermapInstall
 		;;
 		B|b)  allInstallMenu
@@ -490,21 +482,21 @@ UserNameSelect(){
 
 #==================================================================== JDK安装 ====================================================================
 JDKInstall(){
+	# JDK 安装路径
+	JDKInstallPath=/home/yuantiaotech
 	# JDK 安装包名称
 	JDKPackageName=jdk-7u80-linux-x64.tar.gz
 	# JDK 文件夹名称
 	JDKFileName=jdk1.7.0_80
-	# JDK 安装路径
-	JDKInstallPath=/home/yuantiaotech
-	# JDK 路径
-	JDKPath=$JDKInstallPath/$JDKFileName
+	# JDK 文件夹路径
+	JDKFilePath=$JDKInstallPath/$JDKFileName
 
 	# 检查amoy路径
-	checkInstallPath
+	checkInstallPath $JDKInstallPath
 
 	# 用于计数，判断安装是否成功
 	count=0
-	if [ ! -d $JDKPath ]; then
+	if [ ! -d $JDKFilePath ]; then
 		if [ ! -f $all_packages_path/$JDKPackageName ]; then
 			echo -e "\033[31m错误：$JDKPackageName 压缩包不存在，先将压缩包拷贝至$all_packages_path路径下！\033[0m"
 			return
@@ -534,7 +526,7 @@ JDKInstall(){
 	else
 		# 修改系统环境变量
 		echo "123456"|sudo -s sed -i '$a########### JAVA Environment #############' /etc/profile
-		echo "123456"|sudo -s sed -i '$aexport JAVA_HOME='$(echo $JDKPath)'' /etc/profile
+		echo "123456"|sudo -s sed -i '$aexport JAVA_HOME='$(echo $JDKFilePath)'' /etc/profile
 		echo "123456"|sudo -s sed -i '$aexport JRE_HOME=$JAVA_HOME/jre' /etc/profile
 		echo "123456"|sudo -s sed -i '$aexport CLASSPATH=./:$JAVA_HOME/lib:$JAVA_HOME/jre/lib' /etc/profile
 		echo "123456"|sudo -s sed -i '$aexport PATH=$PATH:$JAVA_HOME/bin' /etc/profile
@@ -548,13 +540,13 @@ JDKInstall(){
 	else
 		# 修改用户环境变量
 		echo "123456"|sudo -s sed -i '$a########### JAVA Environment #############' /home/yuantiaotech/.bashrc
-		echo "123456"|sudo -s sed -i '$aexport JAVA_HOME='$(echo $JDKPath)'' /home/yuantiaotech/.bashrc
+		echo "123456"|sudo -s sed -i '$aexport JAVA_HOME='$(echo $JDKFilePath)'' /home/yuantiaotech/.bashrc
 		echo "123456"|sudo -s sed -i '$aexport JRE_HOME=$JAVA_HOME/jre' /home/yuantiaotech/.bashrc
 		echo "123456"|sudo -s sed -i '$aexport CLASSPATH=./:$JAVA_HOME/lib:$JAVA_HOME/jre/lib' /home/yuantiaotech/.bashrc
 		echo "123456"|sudo -s sed -i '$aexport PATH=$PATH:$JAVA_HOME/bin' /home/yuantiaotech/.bashrc
 		# 生效配置
 		source /home/yuantiaotech/.bashrc
-		echo "123456"|sudo -s su - root -c "echo "JAVA_HOME=$JDKPath" >> /etc/environment"
+		echo "123456"|sudo -s su - root -c "echo "JAVA_HOME=$JDKFilePath" >> /etc/environment"
 		source /etc/environment
 	fi
 	
@@ -569,7 +561,7 @@ JDKInstall(){
 	if [ ! -d /usr/java ]; then
 		echo "123456"|sudo -s mkdir /usr/java
 	fi
-	echo "123456"|sudo -s ln -s $JDKPath/ /usr/java/
+	echo "123456"|sudo -s ln -s $JDKFilePath/ /usr/java/
 	echo "123456"|sudo -s mv /usr/java/$JDKFileName /usr/java/jdk1.7
 
 	if [ "$count" == 2 ]; then
@@ -581,8 +573,11 @@ JDKInstall(){
 	fi
 }
 
+
 #==================================================================== Supervisor安装 ====================================================================
 SupervisorInstall(){
+	# 安装路径
+	installPath=/home/yuantiaotech/supervisor
 	# meld 安装包名称
 	meldPackageName=meld3-1.0.2.tar.gz
 	# meld 文件夹名称
@@ -591,11 +586,9 @@ SupervisorInstall(){
 	supervisorPackageName=supervisor-3.3.1.tar.gz
 	# supervisor 文件夹名称
 	supervisorFileName=supervisor-3.3.1
-	# 安装路径
-	installPath=/home/yuantiaotech/supervisor
 
 	# 检查amoy路径
-	checkInstallPath
+	checkInstallPath $installPath
 
 	# 检查java环境
 	java -version
@@ -860,56 +853,56 @@ MySQLInstall(){
 	echo "123456"|sudo -s chkconfig mysql on
 	# 配置my.cnf文件
 	if [ ! -f /etc/my.cnf ]; then
-		echo "123456"|sudo -s su - root -c "echo "[mysqld]" >> /home/yuantiaotech/my.cnf"
-		echo "123456"|sudo -s sed -i '$adatadir=/var/lib/mysql' /home/yuantiaotech/my.cnf
-		echo "123456"|sudo -s sed -i '$asocket=/var/lib/mysql/mysql.sock' /home/yuantiaotech/my.cnf
-		echo "123456"|sudo -s sed -i '$auser=mysql' /home/yuantiaotech/my.cnf
-		echo "123456"|sudo -s sed -i '$aport=3306' /home/yuantiaotech/my.cnf
-		echo "123456"|sudo -s sed -i '$alower_case_table_names=1' /home/yuantiaotech/my.cnf
-		echo "123456"|sudo -s sed -i '$acharacter-set-server=utf8' /home/yuantiaotech/my.cnf
-		echo "123456"|sudo -s sed -i '$asymbolic-links=0' /home/yuantiaotech/my.cnf
-		echo "123456"|sudo -s sed -i '$askip-name-resolve' /home/yuantiaotech/my.cnf
-		echo "123456"|sudo -s sed -i '$anet_write_timeout=600' /home/yuantiaotech/my.cnf
-		echo "123456"|sudo -s sed -i '$await_timeout=31536000' /home/yuantiaotech/my.cnf
-		echo "123456"|sudo -s sed -i '$ainteractive_timeout=31536000' /home/yuantiaotech/my.cnf
-		echo "123456"|sudo -s sed -i '$acollation-server=utf8_general_ci' /home/yuantiaotech/my.cnf
-		echo "123456"|sudo -s sed -i '$askip-external-locking' /home/yuantiaotech/my.cnf
-		echo "123456"|sudo -s sed -i '$akey_buffer=512M' /home/yuantiaotech/my.cnf
-		echo "123456"|sudo -s sed -i '$amax_allowed_packet=16M' /home/yuantiaotech/my.cnf
-		echo "123456"|sudo -s sed -i '$athread_stack=192K' /home/yuantiaotech/my.cnf
-		echo "123456"|sudo -s sed -i '$athread_cache_size=8' /home/yuantiaotech/my.cnf
-		echo "123456"|sudo -s sed -i '$aread_rnd_buffer_size=2560M' /home/yuantiaotech/my.cnf
-		echo "123456"|sudo -s sed -i '$asort_buffer_size=2560M' /home/yuantiaotech/my.cnf
-		echo "123456"|sudo -s sed -i '$ajoin_buffer_size=2560M' /home/yuantiaotech/my.cnf
-		echo "123456"|sudo -s sed -i '$ainnodb_buffer_pool_size=6G' /home/yuantiaotech/my.cnf
-		echo "123456"|sudo -s sed -i '$aread_buffer_size=2560M' /home/yuantiaotech/my.cnf
-		echo "123456"|sudo -s sed -i '$amyisam-recover=BACKUP' /home/yuantiaotech/my.cnf
-		echo "123456"|sudo -s sed -i '$atmp_table_size=512M' /home/yuantiaotech/my.cnf
-		echo "123456"|sudo -s sed -i '$amax_connections=1500' /home/yuantiaotech/my.cnf
-		echo "123456"|sudo -s sed -i '$aquery_cache_limit=256M' /home/yuantiaotech/my.cnf
-		echo "123456"|sudo -s sed -i '$aquery_cache_size=1024M' /home/yuantiaotech/my.cnf
-		echo "123456"|sudo -s sed -i '$aexpire_logs_days=10' /home/yuantiaotech/my.cnf
-		echo "123456"|sudo -s sed -i '$amax_binlog_size=100M' /home/yuantiaotech/my.cnf
+		echo "123456"|sudo -s su - root -c "echo "[mysqld]" >> /home/my.cnf"
+		echo "123456"|sudo -s sed -i '$adatadir=/var/lib/mysql' /home/my.cnf
+		echo "123456"|sudo -s sed -i '$asocket=/var/lib/mysql/mysql.sock' /home/my.cnf
+		echo "123456"|sudo -s sed -i '$auser=mysql' /home/my.cnf
+		echo "123456"|sudo -s sed -i '$aport=3306' /home/my.cnf
+		echo "123456"|sudo -s sed -i '$alower_case_table_names=1' /home/my.cnf
+		echo "123456"|sudo -s sed -i '$acharacter-set-server=utf8' /home/my.cnf
+		echo "123456"|sudo -s sed -i '$asymbolic-links=0' /home/my.cnf
+		echo "123456"|sudo -s sed -i '$askip-name-resolve' /home/my.cnf
+		echo "123456"|sudo -s sed -i '$anet_write_timeout=600' /home/my.cnf
+		echo "123456"|sudo -s sed -i '$await_timeout=31536000' /home/my.cnf
+		echo "123456"|sudo -s sed -i '$ainteractive_timeout=31536000' /home/my.cnf
+		echo "123456"|sudo -s sed -i '$acollation-server=utf8_general_ci' /home/my.cnf
+		echo "123456"|sudo -s sed -i '$askip-external-locking' /home/my.cnf
+		echo "123456"|sudo -s sed -i '$akey_buffer=512M' /home/my.cnf
+		echo "123456"|sudo -s sed -i '$amax_allowed_packet=16M' /home/my.cnf
+		echo "123456"|sudo -s sed -i '$athread_stack=192K' /home/my.cnf
+		echo "123456"|sudo -s sed -i '$athread_cache_size=8' /home/my.cnf
+		echo "123456"|sudo -s sed -i '$aread_rnd_buffer_size=2560M' /home/my.cnf
+		echo "123456"|sudo -s sed -i '$asort_buffer_size=2560M' /home/my.cnf
+		echo "123456"|sudo -s sed -i '$ajoin_buffer_size=2560M' /home/my.cnf
+		echo "123456"|sudo -s sed -i '$ainnodb_buffer_pool_size=6G' /home/my.cnf
+		echo "123456"|sudo -s sed -i '$aread_buffer_size=2560M' /home/my.cnf
+		echo "123456"|sudo -s sed -i '$amyisam-recover=BACKUP' /home/my.cnf
+		echo "123456"|sudo -s sed -i '$atmp_table_size=512M' /home/my.cnf
+		echo "123456"|sudo -s sed -i '$amax_connections=1500' /home/my.cnf
+		echo "123456"|sudo -s sed -i '$aquery_cache_limit=256M' /home/my.cnf
+		echo "123456"|sudo -s sed -i '$aquery_cache_size=1024M' /home/my.cnf
+		echo "123456"|sudo -s sed -i '$aexpire_logs_days=10' /home/my.cnf
+		echo "123456"|sudo -s sed -i '$amax_binlog_size=100M' /home/my.cnf
 		
-		echo "123456"|sudo -s sed -i '$a[client]' /home/yuantiaotech/my.cnf
-		echo "123456"|sudo -s sed -i '$aport=3306' /home/yuantiaotech/my.cnf
-		echo "123456"|sudo -s sed -i '$adefault-character-set=utf8' /home/yuantiaotech/my.cnf
+		echo "123456"|sudo -s sed -i '$a[client]' /home/my.cnf
+		echo "123456"|sudo -s sed -i '$aport=3306' /home/my.cnf
+		echo "123456"|sudo -s sed -i '$adefault-character-set=utf8' /home/my.cnf
 
-		echo "123456"|sudo -s sed -i '$a[mysqld_safe]' /home/yuantiaotech/my.cnf
-		echo "123456"|sudo -s sed -i '$alog-error=/var/log/mysqld.log' /home/yuantiaotech/my.cnf
-		echo "123456"|sudo -s sed -i '$asocket=/var/lib/mysql/mysql.sock' /home/yuantiaotech/my.cnf
-		echo "123456"|sudo -s sed -i '$apid-file=/var/lib/mysql/mysql.pid' /home/yuantiaotech/my.cnf
-		echo "123456"|sudo -s sed -i '$anice=0' /home/yuantiaotech/my.cnf
+		echo "123456"|sudo -s sed -i '$a[mysqld_safe]' /home/my.cnf
+		echo "123456"|sudo -s sed -i '$alog-error=/var/log/mysqld.log' /home/my.cnf
+		echo "123456"|sudo -s sed -i '$asocket=/var/lib/mysql/mysql.sock' /home/my.cnf
+		echo "123456"|sudo -s sed -i '$apid-file=/var/lib/mysql/mysql.pid' /home/my.cnf
+		echo "123456"|sudo -s sed -i '$anice=0' /home/my.cnf
 
-		echo "123456"|sudo -s sed -i '$a[mysqldump]' /home/yuantiaotech/my.cnf
-		echo "123456"|sudo -s sed -i '$aquick' /home/yuantiaotech/my.cnf
-		echo "123456"|sudo -s sed -i '$aquote-names' /home/yuantiaotech/my.cnf
-		echo "123456"|sudo -s sed -i '$amax_allowed_packet=1024M' /home/yuantiaotech/my.cnf
+		echo "123456"|sudo -s sed -i '$a[mysqldump]' /home/my.cnf
+		echo "123456"|sudo -s sed -i '$aquick' /home/my.cnf
+		echo "123456"|sudo -s sed -i '$aquote-names' /home/my.cnf
+		echo "123456"|sudo -s sed -i '$amax_allowed_packet=1024M' /home/my.cnf
 
-		echo "123456"|sudo -s sed -i '$a[mysql]' /home/yuantiaotech/my.cnf
-		echo "123456"|sudo -s sed -i '$a[isamchk]' /home/yuantiaotech/my.cnf
-		echo "123456"|sudo -s sed -i '$akey_buffer=16M' /home/yuantiaotech/my.cnf
-		echo "123456"|sudo -s mv /home/yuantiaotech/my.cnf /etc
+		echo "123456"|sudo -s sed -i '$a[mysql]' /home/my.cnf
+		echo "123456"|sudo -s sed -i '$a[isamchk]' /home/my.cnf
+		echo "123456"|sudo -s sed -i '$akey_buffer=16M' /home/my.cnf
+		echo "123456"|sudo -s mv /home/my.cnf /etc
 		echo "123456"|sudo -s chmod 644 /etc/my.cnf
 
 		if [ $? -eq 0 ]; then
@@ -923,14 +916,15 @@ MySQLInstall(){
 		echo -e "\033[32m/etc/my.cnf 文件已经存在\033[0m"
 	fi
 
-	if [ "$count" == 4 ]; then
+	if [ "$count" == 3 ]; then
 		echo -e "\033[32mMySQL --------------------------- [安装成功]\033[0m"
 		# 启动Mysql
 		echo -e "\033[32m正在启动 MySQL...\033[0m"
 		sleep 2
 		echo "123456"|sudo -s service mysql start
-	elif [ "$count" != 4 ]; then
+	elif [ "$count" != 3 ]; then
 		echo -e "\033[31mMySQL --------------------------- [安装失败]\033[0m"
+		return
 	fi
 	
 	# 修改/etc/hosts
@@ -1461,12 +1455,15 @@ closeFirewall(){
 
 #==================================================================== ActiveMQ 安装 ====================================================================
 ActiveMQInstall(){
-	ActiveMQPackageName=apache-activemq-5.14.2-bin.tar.gz
-	ActiveMQFileName=apache-activemq-5.14.2
+	# ActiveMQ 安装路径
 	ActiveMQinstallPath=/home/yuantiaotech
+	# ActiveMQ 压缩包名
+	ActiveMQPackageName=apache-activemq-5.14.2-bin.tar.gz
+	# ActiveMQ 文件夹名
+	ActiveMQFileName=apache-activemq-5.14.2
 
 	# 检查安装路径
-	checkInstallPath
+	checkInstallPath $ActiveMQinstallPath
 	# 解压依赖包
 	if [ ! -d $all_packages_path/$ActiveMQFileName ]; then
 		if [ ! -f $all_packages_path/$ActiveMQPackageName ]; then
@@ -1515,19 +1512,19 @@ ActiveMQInstall(){
 	fi
 }
 
-#==================================================================== 检查/home/yuantiaotech路径是否存在 ====================================================================
+#==================================================================== 检查安装路径是否存在 ====================================================================
 checkInstallPath(){
 	# 检查路径
-	if [ ! -d /home/yuantiaotech ]; then
-	    mkdir /home/yuantiaotech
+	if [ ! -d $1 ]; then
+	    mkdir -p $1
 	    if [ $? -eq 0 ]; then
-			echo -e "\033[32m/home/yuantiaotech 路径创建成功\033[0m"
+			echo -e "\033[32m$1 路径创建成功\033[0m"
 		else
-			echo -e "\033[31m/home/yuantiaotech 路径创建失败\033[0m"
+			echo -e "\033[31m$1 路径创建失败\033[0m"
 			exit 0
 		fi
 	else
-	    echo -e "\033[32m/home/yuantiaotech 路径已经存在\033[0m"
+	    echo -e "\033[32m$1 路径已经存在\033[0m"
 	fi
 }
 

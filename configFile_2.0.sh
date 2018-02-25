@@ -2,12 +2,15 @@
 
 # 文 件 名 : configFile_2.0.sh
 # 作    者 : 沈喆
-# 版    本 : 1.1
-# 更新时间 : 2018/01/31
+# 创建时间 : 2018/01/31
+# 版    本 : 2.1.1
+# 更新时间 : 2018/02/25
 # 描    述 : 本脚本用于在态势2.0部署过程中对两个tomcat进行相应的配置。
-# 			 一般将tomcat都部署在/home/yuantiaotech/project/aaron目录下，部署之前我们需要手动将tomcat的名称分别命名成tomcat_aaron以及tomcat_geoLayer，
+# 			 一般将tomcat都部署在/home/yuantiaotech/project/aaron目录下，
+#			 部署之前我们需要手动将tomcat的名称分别命名成tomcat_aaron以及tomcat_geoLayer，
 #			 然后将tomcat放置在/tmp路径下，随后修改完毕脚本【手动修改】内容以后执行脚本即可，脚本会自行将tomcat需要修改IP及数据库名的内容以及端口自动完成修改，
 #			 脚本支持自动生成supervisor下的conf文件。
+#			 建议在yuantiaotech用户下运行脚本。
 
 # -------------------------------------------------------------- 手动修改 --------------------------------------------------------------
 camo_IP_database=192.168.0.112			# 大数据camo数据库服务器IP
