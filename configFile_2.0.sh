@@ -3,7 +3,7 @@
 # 文 件 名 : configFile_2.0.sh
 # 作    者 : 沈喆
 # 创建时间 : 2018/01/31
-# 版    本 : 2.1.1
+# 版    本 : 2.1.2
 # 更新时间 : 2018/02/25
 # 描    述 : 本脚本用于在态势2.0部署过程中对两个tomcat进行相应的配置。
 # 			 一般将tomcat都部署在/home/yuantiaotech/project/aaron目录下，
@@ -11,6 +11,11 @@
 #			 然后将tomcat放置在/tmp路径下，随后修改完毕脚本【手动修改】内容以后执行脚本即可，脚本会自行将tomcat需要修改IP及数据库名的内容以及端口自动完成修改，
 #			 脚本支持自动生成supervisor下的conf文件。
 #			 建议在yuantiaotech用户下运行脚本。
+#
+
+# 依 赖 包 ：nginx开机自启	：nginx
+
+# 更新说明 ：新增加了nginx开机自启配置
 
 # -------------------------------------------------------------- 手动修改 --------------------------------------------------------------
 camo_IP_database=192.168.0.112			# 大数据camo数据库服务器IP
@@ -90,7 +95,7 @@ configTomcatAaron(){
 		configSupervisorConf
 	else
 		echo -e "\033[31m错误：$tomcat_name不存在，先将文件夹拷贝至$all_packages_path路径下！\033[0m"
-	fi	
+	fi
 }
 
 # 配置aaron的配置文件
@@ -279,10 +284,54 @@ checkInstallPath(){
 	fi
 }
 
+configNginx(){
+	if [ -d $all_packages_path/nginx ]; then
+		# 拷贝修改权限
+		if [ -d /etc/init.d/nginx ]; then
+			echo -e "\033[32m/etc/init.d/nginx 脚本已经存在\033[0m"
+		else
+			echo -e "\033[32m开始拷贝nginx脚本到/etc/init.d/ 请等待...\033[0m"
+			echo "123456"|sudo -s cp -r $all_packages_path/nginx /etc/init.d/
+			echo "123456"|sudo -s chmod -R 777 /etc/init.d/nginx
+		fi
+		echo "123456"|sudo -s chkconfig --add /etc/init.d/nginx
+		echo "123456"|sudo -s chkconfig nginx on
+		echo "123456"|sudo -s service nginx restart
+		if [ $? -eq 0 ]; then
+			echo -e "\033[32mnginx 开机自启配置成功\033[0m"
+		else
+			echo -e "\033[31mnginx 开机自启配置失败\033[0m"
+		fi
+	else
+		echo -e "\033[31m错误：nginx脚本不存在，先将脚本拷贝至$all_packages_path路径下！\033[0m"
+	fi	
+}
+
 # ================================================================ 主函数 ================================================================
 menu(){
-	checkInstallPath
-	configTomcatAaron
-	configTomcatGeo
+	echo -e "\033[32m┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\033[0m"
+	echo -e "\033[32m┣━━━━━━━━━━━━━━━━━━ 主菜单 ━━━━━━━━━━━━━━━━━━┫\033[0m"
+	echo -e "\033[32m┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫\033[0m"
+	echo -e "\033[32m┃ [1]配置tomcat         [2]配置nginx开机自启 ┃\033[0m"
+	echo -e "\033[32m┃ [Q]退出安装                                ┃\033[0m"	
+	echo -e "\033[32m┃                                            ┃\033[0m"	
+	echo -e "\033[32m┃ *确保安装包已经放置在/tmp路径下            ┃\033[0m"
+	echo -e "\033[32m┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\033[0m"
+	#stty erase ^H
+	read -p "选择需要安装的软件编号:" val
+	case $val in
+		1)	checkInstallPath
+			configTomcatAaron
+			configTomcatGeo
+		;;
+		2)	configNginx
+		;;
+		Q|q)  exit 0
+		;;
+		*)  echo -e "\033[31m输入有误\033[0m"
+			return
+		;;
+	esac
+	
 }
 menu
