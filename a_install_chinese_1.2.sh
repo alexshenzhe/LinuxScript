@@ -2,7 +2,7 @@
 
 # 文 件 名 : a_install_chinese1.2.sh
 # 作    者 : 沈喆
-# 版    本 : 1.1
+# 版    本 : 1.2.2
 # 更新时间 : 2018/01/26
 # 描    述 : 这个脚本用于态势1.2版本中安装JDK、Supermap、Supervisor、MySQL、Oracle、Tomcat、dataserver、toolsDownload，后续增不增加就看我心情了。
 #            脚本默认会配置tomcat的默认内存(512~1024m)及报表，新增加了创建或删除linux用户以及关闭防火墙及SELINUX，根据提示操作即可。
@@ -12,6 +12,8 @@
 #            Tomcat     : apache-tomcat-7.0.63.tar.gz
 #            Supermap   : supermap_iserver_7.1.2_linux64.tar.gz
 #			 Oracle     : linux.x64_11gR2_database_1of2.zip \ linux.x64_11gR2_database_2of2.zip \ centos6.8_oracle11grpm.tar.gz
+#			 Zookeeper  : zookeeper-3.4.6.tar.gz
+#			 Storm      : apache-storm-0.9.3.tar.gz
 #			 以上安装包可以从150服务器的/项目部文档/技术支持/部署常用软件/脚本/a_install文件夹下获取
 
 # 系统变量
@@ -224,6 +226,29 @@ supermapInstall(){
 	# 用于计数，判断安装是否成功
 	count=0
 	supermap_path=$install_path/SuperMapiServer7C
+
+	# 解压安装依赖包
+	if [ ! -d /tmp/offline-supermap ]; then
+		if [ ! -f /tmp/Centos-offline-supermap.tar.gz ]; then
+			echo -e "\033[31m错误：Centos-offline-supermap.tar.gz 压缩包不存在，先将压缩包拷贝至$all_packages_path路径下！\033[0m"
+			return
+		else
+			tar -zxvf /tmp/Centos-offline-supermap.tar.gz -C /tmp
+			sleep 2
+
+			# 安装依赖包
+			echo "123456"|sudo -s rpm -ivh --force --nodeps /tmp/offline-supermap/*.rpm
+
+			if [ $? -eq 0 ]; then
+				let count+=1
+				echo -e "\033[32mSuperMap 依赖环境安装成功\033[0m"
+			else
+				echo -e "\033[31mSuperMap 依赖环境安装失败\033[0m"
+				return
+			fi
+		fi
+	fi
+
 	if [ ! -d $supermap_path ]; then
 		if [ ! -f supermap_iserver_7.1.2_linux64.tar.gz ]; then
 			echo -e "\033[31m错误：supermap_iserver_7.1.2_linux64.tar.gz压缩包不存在，先将压缩包拷贝至$all_package_path路径下！\033[0m"
@@ -275,9 +300,9 @@ supermapInstall(){
 	fi
 	sleep 3
 
-	if [ "$count" == 3 ]; then
+	if [ "$count" == 4 ]; then
 		echo -e "\033[32mSuperMap --------------------------- [安装成功]\033[0m"
-	elif [ "$count" != 3 ]; then
+	elif [ "$count" != 4 ]; then
 		echo -e "\033[31mSuperMap --------------------------- [安装失败]\033[0m"
 		return
 	fi

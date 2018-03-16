@@ -3,7 +3,7 @@
 # 文 件 名 : a_install_chinese2.0.sh
 # 作    者 : 沈喆
 # 创建时间 : 2017/04/13
-# 版 本 号 : 2.1.1
+# 版 本 号 : 2.1.2
 # 更新时间 : 2018/02/25
 # 描    述 : 这个脚本用于部署态势2.0过程中安装JDK、Supermap、Supervisor、MySQL、Oracle、Tomcat、toolsDownload、ActiveMQ，后续增不增加就看我心情了。
 #			 脚本默认会配置tomcat的默认内存(512~1024m)及报表，新增加了创建或删除linux用户以及关闭防火墙及SELINUX，自动将ActiveMQ添加到系统服务开机自启进行管理，
@@ -19,18 +19,22 @@
 #
 #			 以上安装包可以从ftp://192.168.0.150/项目部文档/技术支持/部署常用软件/脚本/a_install文件夹下获取(使用support/123456登录)。
 
+# 更新说明 : 1. 增加CentOS下supermap依赖包安装；
+#			 2. 修正Mysql安装后my.cnf可能无效的问题；
+#			 3. 由于CDH安装需要，MySQL配置时会创建一个scm用户。
+
+#----------------------------------------------------------------------------------------------------------------------------------------------------
 # 系统变量
 system_name=0 # 系统名称 例如 index、monitor、guide...
 script_path=$(cd "$(dirname "$0")"; pwd) # 当前脚本路径
-server_port=0 # dataserver 端口
 shutdow_port=8005 # tomcat 端口
 http_port=8081 # tomcat 端口
 redirect_port=8443 # tomcat 端口
 ajp_port=8009 # tomcat 端口
 tomcat_install_path=0 # tomcat安装路径，用户选择或输入
 tomcat_file_path=0 # tomcat 文件夹路径
-user_name=yuantiaotech # 需要创建的用户名
-all_packages_path=/tmp # 安装包默认放置路径，所有安装包都会到这个路径下去读取
+user_name=yuantiaotech # 默认需要创建的用户名
+all_packages_path=/tmp # 默认安装包放置路径，所有安装包都会到这个路径下去读取
 IP_address=`ifconfig | grep "inet addr:"|head -n 1 | awk '{print $2}' | sed 's/addr://g'` # 当前服务器IP地址
 
 
@@ -226,12 +230,40 @@ supermapInstall(){
 	supermapPackageName=supermap_iserver_7.1.2_linux64.tar.gz
 	# supermap 文件夹名
 	supermapFileName=SuperMapiServer7C
+	# supermap 依赖包名
+	DependentPackageName=Centos-offline-supermap.tar.gz
+	# supermap 依赖包文件夹名
+	DependentFileName=offline-supermap
 	# supermap 文件夹路径
 	supermapFilePath=$supermapInstallPath/$supermapFileName
 	# 用于计数，判断安装是否成功
 	count=0
+
+	# 解压安装依赖包
+	if [ ! -d $all_packages_path/$DependentFileName ]; then
+		if [ ! -f $all_packages_path/$DependentPackageName ]; then
+			echo -e "\033[31m错误：$DependentPackageName 压缩包不存在，先将压缩包拷贝至$all_packages_path路径下！\033[0m"
+			return
+		else
+			tar -zxvf $all_packages_path/$DependentPackageName -C $all_packages_path
+			sleep 2
+
+			# 安装依赖包
+			echo "123456"|sudo -s rpm -ivh --force --nodeps $all_packages_path/$DependentFileName/*.rpm
+
+			if [ $? -eq 0 ]; then
+				let count+=1
+				echo -e "\033[32mSuperMap 依赖环境安装成功\033[0m"
+			else
+				echo -e "\033[31mSuperMap 依赖环境安装失败\033[0m"
+				return
+			fi
+		fi
+	fi
+
+	# 安装 supermap
 	if [ ! -d $supermapFilePath ]; then
-		if [ ! -f $supermapPackageName ]; then
+		if [ ! -f $all_packages_path/$supermapPackageName ]; then
 			echo -e "\033[31m错误：$supermapPackageName压缩包不存在，先将压缩包拷贝至$all_packages_path路径下！\033[0m"
 			return
 		else
@@ -281,9 +313,9 @@ supermapInstall(){
 	fi
 	sleep 3
 
-	if [ "$count" == 3 ]; then
+	if [ "$count" == 4 ]; then
 		echo -e "\033[32mSuperMap --------------------------- [安装成功]\033[0m"
-	elif [ "$count" != 3 ]; then
+	elif [ "$count" != 4 ]; then
 		echo -e "\033[31mSuperMap --------------------------- [安装失败]\033[0m"
 		return
 	fi
@@ -518,7 +550,7 @@ JDKInstall(){
 
 	# 卸载旧版本
 	echo -e "\033[31m开始卸载旧版本...请等待...\033[0m"
-	echo "123456"|sudo -s su - root -c "rpm -qa | grep java | xargs rpm -e --nodeps"
+	echo "123456"|sudo -s rpm -qa | grep java | xargs rpm -e --nodeps
 
 	if cat /etc/profile | grep JAVA_HOME >/dev/null
 		then
@@ -642,8 +674,8 @@ SupervisorInstall(){
 	
 	# 安装meld3-1.0.2
 	cd $installPath/$meldFileName/
-	chown -R yuantiaotech:yuantiaotech $installPath/$meldFileName
-	chmod -R 777 $installPath/$meldFileName
+	echo "123456"|sudo -s chown -R yuantiaotech:yuantiaotech $installPath/$meldFileName
+	echo "123456"|sudo -s chmod -R 777 $installPath/$meldFileName
 	echo "123456"|sudo -s python setup.py install
 	if [ $? -eq 0 ]; then
 		let count+=1
@@ -653,8 +685,8 @@ SupervisorInstall(){
 	fi
 	# 安装supervisor-3.3.1
 	cd $installPath/$supervisorFileName/
-	chown -R yuantiaotech:yuantiaotech $installPath/$supervisorFileName
-	chmod -R 777 $installPath/$supervisorFileName
+	echo "123456"|sudo -s chown -R yuantiaotech:yuantiaotech $installPath/$supervisorFileName
+	echo "123456"|sudo -s chmod -R 777 $installPath/$supervisorFileName
 	echo "123456"|sudo -s python setup.py install
 	if [ $? -eq 0 ]; then
 		let count+=1
@@ -853,56 +885,55 @@ MySQLInstall(){
 	echo "123456"|sudo -s chkconfig mysql on
 	# 配置my.cnf文件
 	if [ ! -f /etc/my.cnf ]; then
-		echo "123456"|sudo -s su - root -c "echo "[mysqld]" >> /home/my.cnf"
-		echo "123456"|sudo -s sed -i '$adatadir=/var/lib/mysql' /home/my.cnf
-		echo "123456"|sudo -s sed -i '$asocket=/var/lib/mysql/mysql.sock' /home/my.cnf
-		echo "123456"|sudo -s sed -i '$auser=mysql' /home/my.cnf
-		echo "123456"|sudo -s sed -i '$aport=3306' /home/my.cnf
-		echo "123456"|sudo -s sed -i '$alower_case_table_names=1' /home/my.cnf
-		echo "123456"|sudo -s sed -i '$acharacter-set-server=utf8' /home/my.cnf
-		echo "123456"|sudo -s sed -i '$asymbolic-links=0' /home/my.cnf
-		echo "123456"|sudo -s sed -i '$askip-name-resolve' /home/my.cnf
-		echo "123456"|sudo -s sed -i '$anet_write_timeout=600' /home/my.cnf
-		echo "123456"|sudo -s sed -i '$await_timeout=31536000' /home/my.cnf
-		echo "123456"|sudo -s sed -i '$ainteractive_timeout=31536000' /home/my.cnf
-		echo "123456"|sudo -s sed -i '$acollation-server=utf8_general_ci' /home/my.cnf
-		echo "123456"|sudo -s sed -i '$askip-external-locking' /home/my.cnf
-		echo "123456"|sudo -s sed -i '$akey_buffer=512M' /home/my.cnf
-		echo "123456"|sudo -s sed -i '$amax_allowed_packet=16M' /home/my.cnf
-		echo "123456"|sudo -s sed -i '$athread_stack=192K' /home/my.cnf
-		echo "123456"|sudo -s sed -i '$athread_cache_size=8' /home/my.cnf
-		echo "123456"|sudo -s sed -i '$aread_rnd_buffer_size=2560M' /home/my.cnf
-		echo "123456"|sudo -s sed -i '$asort_buffer_size=2560M' /home/my.cnf
-		echo "123456"|sudo -s sed -i '$ajoin_buffer_size=2560M' /home/my.cnf
-		echo "123456"|sudo -s sed -i '$ainnodb_buffer_pool_size=6G' /home/my.cnf
-		echo "123456"|sudo -s sed -i '$aread_buffer_size=2560M' /home/my.cnf
-		echo "123456"|sudo -s sed -i '$amyisam-recover=BACKUP' /home/my.cnf
-		echo "123456"|sudo -s sed -i '$atmp_table_size=512M' /home/my.cnf
-		echo "123456"|sudo -s sed -i '$amax_connections=1500' /home/my.cnf
-		echo "123456"|sudo -s sed -i '$aquery_cache_limit=256M' /home/my.cnf
-		echo "123456"|sudo -s sed -i '$aquery_cache_size=1024M' /home/my.cnf
-		echo "123456"|sudo -s sed -i '$aexpire_logs_days=10' /home/my.cnf
-		echo "123456"|sudo -s sed -i '$amax_binlog_size=100M' /home/my.cnf
+		echo "123456"|sudo -s su - root -c "echo "[mysqld]" >> /etc/my.cnf"
+		echo "123456"|sudo -s sed -i '$adatadir=/var/lib/mysql' /etc/my.cnf
+		echo "123456"|sudo -s sed -i '$asocket=/var/lib/mysql/mysql.sock' /etc/my.cnf
+		echo "123456"|sudo -s sed -i '$auser=mysql' /etc/my.cnf
+		echo "123456"|sudo -s sed -i '$aport=3306' /etc/my.cnf
+		echo "123456"|sudo -s sed -i '$alower_case_table_names=1' /etc/my.cnf
+		echo "123456"|sudo -s sed -i '$acharacter-set-server=utf8' /etc/my.cnf
+		echo "123456"|sudo -s sed -i '$asymbolic-links=0' /etc/my.cnf
+		echo "123456"|sudo -s sed -i '$askip-name-resolve' /etc/my.cnf
+		echo "123456"|sudo -s sed -i '$anet_write_timeout=600' /etc/my.cnf
+		echo "123456"|sudo -s sed -i '$await_timeout=31536000' /etc/my.cnf
+		echo "123456"|sudo -s sed -i '$ainteractive_timeout=31536000' /etc/my.cnf
+		echo "123456"|sudo -s sed -i '$acollation-server=utf8_general_ci' /etc/my.cnf
+		echo "123456"|sudo -s sed -i '$askip-external-locking' /etc/my.cnf
+		echo "123456"|sudo -s sed -i '$akey_buffer=512M' /etc/my.cnf
+		echo "123456"|sudo -s sed -i '$amax_allowed_packet=16M' /etc/my.cnf
+		echo "123456"|sudo -s sed -i '$athread_stack=192K' /etc/my.cnf
+		echo "123456"|sudo -s sed -i '$athread_cache_size=8' /etc/my.cnf
+		echo "123456"|sudo -s sed -i '$aread_rnd_buffer_size=2560M' /etc/my.cnf
+		echo "123456"|sudo -s sed -i '$asort_buffer_size=2560M' /etc/my.cnf
+		echo "123456"|sudo -s sed -i '$ajoin_buffer_size=2560M' /etc/my.cnf
+		echo "123456"|sudo -s sed -i '$ainnodb_buffer_pool_size=6G' /etc/my.cnf
+		echo "123456"|sudo -s sed -i '$aread_buffer_size=2560M' /etc/my.cnf
+		echo "123456"|sudo -s sed -i '$amyisam-recover=BACKUP' /etc/my.cnf
+		echo "123456"|sudo -s sed -i '$atmp_table_size=512M' /etc/my.cnf
+		echo "123456"|sudo -s sed -i '$amax_connections=1500' /etc/my.cnf
+		echo "123456"|sudo -s sed -i '$aquery_cache_limit=256M' /etc/my.cnf
+		echo "123456"|sudo -s sed -i '$aquery_cache_size=1024M' /etc/my.cnf
+		echo "123456"|sudo -s sed -i '$aexpire_logs_days=10' /etc/my.cnf
+		echo "123456"|sudo -s sed -i '$amax_binlog_size=100M' /etc/my.cnf
 		
-		echo "123456"|sudo -s sed -i '$a[client]' /home/my.cnf
-		echo "123456"|sudo -s sed -i '$aport=3306' /home/my.cnf
-		echo "123456"|sudo -s sed -i '$adefault-character-set=utf8' /home/my.cnf
+		echo "123456"|sudo -s sed -i '$a[client]' /etc/my.cnf
+		echo "123456"|sudo -s sed -i '$aport=3306' /etc/my.cnf
+		echo "123456"|sudo -s sed -i '$adefault-character-set=utf8' /etc/my.cnf
 
-		echo "123456"|sudo -s sed -i '$a[mysqld_safe]' /home/my.cnf
-		echo "123456"|sudo -s sed -i '$alog-error=/var/log/mysqld.log' /home/my.cnf
-		echo "123456"|sudo -s sed -i '$asocket=/var/lib/mysql/mysql.sock' /home/my.cnf
-		echo "123456"|sudo -s sed -i '$apid-file=/var/lib/mysql/mysql.pid' /home/my.cnf
-		echo "123456"|sudo -s sed -i '$anice=0' /home/my.cnf
+		echo "123456"|sudo -s sed -i '$a[mysqld_safe]' /etc/my.cnf
+		echo "123456"|sudo -s sed -i '$alog-error=/var/log/mysqld.log' /etc/my.cnf
+		echo "123456"|sudo -s sed -i '$asocket=/var/lib/mysql/mysql.sock' /etc/my.cnf
+		echo "123456"|sudo -s sed -i '$apid-file=/var/lib/mysql/mysql.pid' /etc/my.cnf
+		echo "123456"|sudo -s sed -i '$anice=0' /etc/my.cnf
 
-		echo "123456"|sudo -s sed -i '$a[mysqldump]' /home/my.cnf
-		echo "123456"|sudo -s sed -i '$aquick' /home/my.cnf
-		echo "123456"|sudo -s sed -i '$aquote-names' /home/my.cnf
-		echo "123456"|sudo -s sed -i '$amax_allowed_packet=1024M' /home/my.cnf
+		echo "123456"|sudo -s sed -i '$a[mysqldump]' /etc/my.cnf
+		echo "123456"|sudo -s sed -i '$aquick' /etc/my.cnf
+		echo "123456"|sudo -s sed -i '$aquote-names' /etc/my.cnf
+		echo "123456"|sudo -s sed -i '$amax_allowed_packet=1024M' /etc/my.cnf
 
-		echo "123456"|sudo -s sed -i '$a[mysql]' /home/my.cnf
-		echo "123456"|sudo -s sed -i '$a[isamchk]' /home/my.cnf
-		echo "123456"|sudo -s sed -i '$akey_buffer=16M' /home/my.cnf
-		echo "123456"|sudo -s mv /home/my.cnf /etc
+		echo "123456"|sudo -s sed -i '$a[mysql]' /etc/my.cnf
+		echo "123456"|sudo -s sed -i '$a[isamchk]' /etc/my.cnf
+		echo "123456"|sudo -s sed -i '$akey_buffer=16M' /etc/my.cnf
 		echo "123456"|sudo -s chmod 644 /etc/my.cnf
 
 		if [ $? -eq 0 ]; then
@@ -946,6 +977,7 @@ MySQLInstall(){
 	# 开启远程访问权限
 	mysql -uroot -p123456 <<EOF
 	grant all privileges on *.* to 'root'@'%' identified by '123456' with grant option;
+	grant all privileges on *.* to 'scm'@'%' identified by 'scm' with grant option;
 	USE mysql;
 	UPDATE user SET Password=PASSWORD('123456') WHERE user='root';
 	UPDATE user SET password_expired='N';
@@ -1014,8 +1046,8 @@ OracleInstall(){
 	else
 		echo -e "\033[32mmcentos6.8_oracle11gPackages 已经存在\033[0m"
 	fi
-	echo "123456"|sudo -s rpm -ivh $all_packages_path/centos6.8_oracle11gPackages/part1/*.rpm --force --nodeps
-	echo "123456"|sudo -s rpm -ivh $all_packages_path/centos6.8_oracle11gPackages/part2_xhost/*.rpm --force --nodeps
+	echo "123456"|sudo -s rpm -ivh --force --nodeps $all_packages_path/centos6.8_oracle11gPackages/part1/*.rpm 
+	echo "123456"|sudo -s rpm -ivh --force --nodeps $all_packages_path/centos6.8_oracle11gPackages/part2_xhost/*.rpm 
 
 	# 修改/etc/hosts
 	addHostName
