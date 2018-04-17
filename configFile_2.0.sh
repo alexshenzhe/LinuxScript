@@ -15,7 +15,8 @@
 
 # 依 赖 包 ：nginx开机自启	：nginx
 
-# 更新说明 ：新增加了nginx开机自启配置
+# 更新说明 ：1. 新增加了nginx开机自启配置；
+#			 2. 端口编号修改；
 
 # -------------------------------------------------------------- 手动修改 --------------------------------------------------------------
 camo_IP_database=192.168.0.112			# 大数据camo数据库服务器IP
@@ -38,9 +39,9 @@ filePath_tomcatPort=$insatll_path/$aaron_name/conf/server.xml
 # geoLayer 端口配置路径
 filePath_geoPort=$insatll_path/$geoLayer_name/conf/server.xml
 # tomcat_aaron及tomcat_geoLayer 端口，默认将系统端口修改成如下端口
-aaron_shutdownPort=8021
+aaron_shutdownPort=8321
 aaron_httpPort=8388
-aaron_ajpPort=8033
+aaron_ajpPort=8333
 geo_shutdownPort=8227
 geo_httpPort=8385
 geo_ajpPort=9395
@@ -134,7 +135,12 @@ configTomcatPort(){
 	configPort
 
 	# http端口
-	catHTTPPort=`cat $configPort_filePath | grep "<Connector connectionTimeout=\"20000\" port=\"....\" protocol=\"HTTP/1.1\" redirectPort=\"....\"/>"`
+	if [ "$tomcat_name" == "$aaron_name" ]; then
+		catHTTPPort=`cat $configPort_filePath | grep "<Connector connectionTimeout=\"20000\" URIEncoding=\"UTF-8\" port=\"....\" protocol=\"HTTP/1.1\" redirectPort=\"....\"/>"`
+	else
+		catHTTPPort=`cat $configPort_filePath | grep "<Connector connectionTimeout=\"20000\" port=\"....\" protocol=\"HTTP/1.1\" redirectPort=\"....\"/>"`
+	fi
+	
 	cat_port=$catHTTPPort
 	port_name=HTTP
 	if [ "$tomcat_name" == "$aaron_name" ]; then
@@ -262,6 +268,7 @@ configSupervisorConf(){
 		echo "123456"|sudo -s mv $insatll_path/$tomcat_name.conf /etc/supervisor/conf.d/
 		if [ $? -eq 0 ]; then
 			echo -e "\033[32m$tomcat_name的$tomcat_name.conf创建成功\033[0m"
+			echo "123456"|sudo -s supervisorctl update
 		else
 			echo -e "\033[31m$tomcat_name的$tomcat_name.conf创建失败\033[0m"
 		fi
@@ -285,9 +292,9 @@ checkInstallPath(){
 }
 
 configNginx(){
-	if [ -d $all_packages_path/nginx ]; then
+	if [ -f $all_packages_path/nginx ]; then
 		# 拷贝修改权限
-		if [ -d /etc/init.d/nginx ]; then
+		if [ -f /etc/init.d/nginx ]; then
 			echo -e "\033[32m/etc/init.d/nginx 脚本已经存在\033[0m"
 		else
 			echo -e "\033[32m开始拷贝nginx脚本到/etc/init.d/ 请等待...\033[0m"
