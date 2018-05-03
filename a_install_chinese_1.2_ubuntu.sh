@@ -227,28 +227,6 @@ supermapInstall(){
 	count=0
 	supermap_path=$install_path/SuperMapiServer7C
 
-	# 解压安装依赖包
-	if [ ! -d /tmp/offline-supermap ]; then
-		if [ ! -f /tmp/Centos-offline-supermap.tar.gz ]; then
-			echo -e "\033[31m错误：Centos-offline-supermap.tar.gz 压缩包不存在，先将压缩包拷贝至$all_packages_path路径下！\033[0m"
-			return
-		else
-			tar -zxvf /tmp/Centos-offline-supermap.tar.gz -C /tmp
-			sleep 2
-
-			# 安装依赖包
-			echo "123456"|sudo -S rpm -ivh --force --nodeps /tmp/offline-supermap/*.rpm
-
-			if [ $? -eq 0 ]; then
-				let count+=1
-				echo -e "\033[32mSuperMap 依赖环境安装成功\033[0m"
-			else
-				echo -e "\033[31mSuperMap 依赖环境安装失败\033[0m"
-				return
-			fi
-		fi
-	fi
-
 	if [ ! -d $supermap_path ]; then
 		if [ ! -f supermap_iserver_7.1.2_linux64.tar.gz ]; then
 			echo -e "\033[31m错误：supermap_iserver_7.1.2_linux64.tar.gz压缩包不存在，先将压缩包拷贝至$all_package_path路径下！\033[0m"
@@ -352,9 +330,8 @@ tomcatInstallSelect(){
 	echo -e "\033[32m┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\033[0m"
 	echo -e "\033[32m┠┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈ TOMCAT 安装 ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┨\033[0m"
 	echo -e "\033[32m┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫\033[0m"
-	echo -e "\033[32m┃ [1]index                       [2]guide    ┃\033[0m"
-	echo -e "\033[32m┃ [3]toolsDownload               [4]SuperMap ┃\033[0m"
-	echo -e "\033[32m┃ [5]GeoLayer                    [6]GeoMap   ┃\033[0m"
+	echo -e "\033[32m┃ [1]index                       [2]SuperMap ┃\033[0m"
+	echo -e "\033[32m┃ [3]toolsDownload               [4]GeoMap   ┃\033[0m"
 	echo -e "\033[32m┃ [B]返回主菜单                  [Q]退出安装 ┃\033[0m"
 	echo -e "\033[32m┃                                            ┃\033[0m"	
 	echo -e "\033[32m┃ *支持直接输入                              ┃\033[0m"
@@ -368,11 +345,9 @@ tomcatInstallSelect(){
 			installPathSelect
 			tomcatInstall
 		;;
-		2)	system_name=guide
-			port_add=2
-			portChange
+		2)  system_name=SuperMap
 			installPathSelect
-			tomcatInstall
+			supermapInstall
 		;;
 		3)  system_name=toolsDownload
 			port_add=17
@@ -380,17 +355,7 @@ tomcatInstallSelect(){
 			installPathSelect
 			tomcatInstall
 		;;
-		4)  system_name=SuperMap
-			installPathSelect
-			supermapInstall
-		;;
-		5)  system_name=geoLayer
-			port_add=7
-			portChange
-			installPathSelect
-			tomcatInstall
-		;;
-		6)  system_name=geoMap
+		4)  system_name=geoMap
 			port_add=18
 			portChange
 			installPathSelect
@@ -596,12 +561,12 @@ deleteUser(){
 			Y|y)  echo "123456"|sudo -S userdel -r $user_name
 				  if [ $? -eq 0  ]; then
 					echo "123456"|sudo -S chmod -v u+w /etc/sudoers
-				  	echo "123456"|sudo -S sed -i -e "/$user_name/d" /etc/sudoers
-				  	echo "123456"|sudo -S chmod -v u-w /etc/sudoers
-				  	echo -e "\033[32m用户: $user_name --------------------------- [删除成功]\033[0m"
+					echo "123456"|sudo -S sed -i -e "/$user_name/d" /etc/sudoers
+					echo "123456"|sudo -S chmod -v u-w /etc/sudoers
+					echo -e "\033[32m用户: $user_name --------------------------- [删除成功]\033[0m"
 				  else
-				  	echo -e "\033[31m用户: $user_name --------------------------- [删除失败]\033[0m"
-				  	return
+					echo -e "\033[31m用户: $user_name --------------------------- [删除失败]\033[0m"
+					return
 				  fi
 			;;
 			N|n)  allInstallMenu
@@ -639,7 +604,7 @@ UserNameSelect(){
 
 #==================================================================== JDK安装 ====================================================================
 JDKInstall(){
-	# JDK 安装包名称
+	# JDK 安装包名称 64位
 	JDKPackageName=jdk-7u80-linux-x64.tar.gz
 	# JDK 文件夹名称
 	JDKFileName=jdk1.7.0_80
@@ -672,63 +637,27 @@ JDKInstall(){
 		let count+=1
 		echo -e "\033[32m$JDKFileName 已经存在\033[0m"
 	fi
+	
+	if cat /etc/profile | grep JAVA_HOME >/dev/null
+		then
+		echo -e "\033[32mJDK 环境变量已经存在\033[0m"
+	else
+		# 修改环境变量
+		echo "123456"|sudo -S sed -i '$a########### JAVA Environment #############' /etc/profile
+		echo "123456"|sudo -S sed -i '$aexport JAVA_HOME='$(echo $JDKPath)'' /etc/profile
+		echo "123456"|sudo -S sed -i '$aexport JRE_HOME=${JAVA_HOME}/jre' /etc/profile
+		echo "123456"|sudo -S sed -i '$aexport CLASSPATH=.:${JAVA_HOME}/lib:${JRE_HOME}/lib::$CATALINA_HOME/lib' /etc/profile
+		echo "123456"|sudo -S sed -i '$aPATH=$JAVA_HOME/bin:$JAVA_HOME/jre/bin:$PATH:$ZOOKEEPER_HOME/bin:$ZOOKEEPER_HOME/conf:$PATH:$STORM_HOME/bin:$PATH:/sbin:$PATH:$CATALINA_HOME/bin' /etc/profile
+		echo "123456"|sudo -S sed -i '$aexport CLASSPATH=$CLASSPATH:.:$JAVA_HOME/lib:$JAVA_HOME/jre/lib' /etc/profile
+		# 生效配置
+		source /etc/profile
 
-	# 判断系统版本
-	if [ "$system_version" = "CentOS" ]; then
-		# 卸载旧版本
-		echo -e "\033[31m开始卸载旧版本...请等待...\033[0m"
-		echo "123456"|sudo -S su - root -c "rpm -qa | grep java | xargs rpm -e --nodeps"
-
-		if cat /etc/profile | grep JAVA_HOME >/dev/null
-			then
-			echo -e "\033[32mJDK 系统环境变量已经存在\033[0m"
-		else
-			# 修改系统环境变量
-			echo "123456"|sudo -S sed -i '$a########### JAVA Environment #############' /etc/profile
-			echo "123456"|sudo -S sed -i '$aexport JAVA_HOME='$(echo $JDKPath)'' /etc/profile
-			echo "123456"|sudo -S sed -i '$aexport JRE_HOME=$JAVA_HOME/jre' /etc/profile
-			echo "123456"|sudo -S sed -i '$aexport CLASSPATH=./:$JAVA_HOME/lib:$JAVA_HOME/jre/lib' /etc/profile
-			echo "123456"|sudo -S sed -i '$aPATH=$JAVA_HOME/bin:$JAVA_HOME/jre/bin:$PATH:$ZOOKEEPER_HOME/bin:$ZOOKEEPER_HOME/conf:$PATH:$STORM_HOME/bin:$PATH:/sbin:$PATH:$CATALINA_HOME/bin' /etc/profile
-			# 生效配置
-			source /etc/profile
-		fi
-
-		if cat /home/yuantiaotech/.bashrc | grep JAVA_HOME >/dev/null
-			then
-			echo -e "\033[32mJDK 用户环境变量已经存在\033[0m"
-		else
-			# 修改用户环境变量
-			echo "123456"|sudo -S sed -i '$a########### JAVA Environment #############' /home/yuantiaotech/.bashrc
-			echo "123456"|sudo -S sed -i '$aexport JAVA_HOME='$(echo $JDKPath)'' /home/yuantiaotech/.bashrc
-			echo "123456"|sudo -S sed -i '$aexport JRE_HOME=$JAVA_HOME/jre' /home/yuantiaotech/.bashrc
-			echo "123456"|sudo -S sed -i '$aexport CLASSPATH=./:$JAVA_HOME/lib:$JAVA_HOME/jre/lib' /home/yuantiaotech/.bashrc
-			echo "123456"|sudo -S sed -i '$aPATH=$JAVA_HOME/bin:$JAVA_HOME/jre/bin:$PATH:$ZOOKEEPER_HOME/bin:$ZOOKEEPER_HOME/conf:$PATH:$STORM_HOME/bin:$PATH:/sbin:$PATH:$CATALINA_HOME/bin' /home/yuantiaotech/.bashrc
-			# 生效配置
-			source /home/yuantiaotech/.bashrc
-			echo "123456"|sudo -S su - root -c "echo "JAVA_HOME=$JDKPath" >> /etc/environment"
-			source /etc/environment
-		fi
-	elif [ "$system_version" = "Ubuntu" ]; then
-		if cat /etc/profile | grep JAVA_HOME >/dev/null
-			then
-			echo -e "\033[32mJDK 环境变量已经存在\033[0m"
-		else
-			# 修改环境变量
-			echo "123456"|sudo -S sed -i '$a########### JAVA Environment #############' /etc/profile
-			echo "123456"|sudo -S sed -i '$aexport JAVA_HOME='$(echo $JDKPath)'' /etc/profile
-			echo "123456"|sudo -S sed -i '$aexport JRE_HOME=${JAVA_HOME}/jre' /etc/profile
-			echo "123456"|sudo -S sed -i '$aexport CLASSPATH=.:${JAVA_HOME}/lib:${JRE_HOME}/lib::$CATALINA_HOME/lib' /etc/profile
-			echo "123456"|sudo -S sed -i '$aPATH=$JAVA_HOME/bin:$JAVA_HOME/jre/bin:$PATH:$ZOOKEEPER_HOME/bin:$ZOOKEEPER_HOME/conf:$PATH:$STORM_HOME/bin:$PATH:/sbin:$PATH:$CATALINA_HOME/bin' /etc/profile
-			echo "123456"|sudo -S sed -i '$aexport CLASSPATH=$CLASSPATH:.:$JAVA_HOME/lib:$JAVA_HOME/jre/lib' /etc/profile
-			# 生效配置
-			source /etc/profile
-
-			echo "123456"|sudo -S update-alternatives --install /usr/bin/java java $JDKPath/jre/bin/java 300
-			echo "123456"|sudo -S update-alternatives --install /usr/bin/javac javac $JDKPath/bin/javac 300
-			echo "123456"|sudo -S update-alternatives --config java
-			echo "123456"|sudo -S update-alternatives --config javac
-		fi
+		echo "123456"|sudo -S update-alternatives --install /usr/bin/java java $JDKPath/jre/bin/java 300
+		echo "123456"|sudo -S update-alternatives --install /usr/bin/javac javac $JDKPath/bin/javac 300
+		echo "123456"|sudo -S update-alternatives --config java
+		echo "123456"|sudo -S update-alternatives --config javac
 	fi
+
 	
 	if [ $? -eq 0 ]; then
 		let count+=1
@@ -736,13 +665,6 @@ JDKInstall(){
 	else
 		echo -e "\033[31mJDK 环境变量配置失败\033[0m"
 	fi
-
-	# 添加JDK软链接，CDH安装时候需要
-	if [ ! -d /usr/java ]; then
-		echo "123456"|sudo -S mkdir /usr/java
-	fi
-	echo "123456"|sudo -S ln -s $JDKPath/ /usr/java/
-	echo "123456"|sudo -S mv /usr/java/$JDKFileName /usr/java/jdk1.7
 
 	if [ "$count" == 2 ]; then
 		echo -e "\033[32mJDK --------------------------- [安装成功]\033[0m"
@@ -753,29 +675,6 @@ JDKInstall(){
 	fi
 }
 
-#==================================================================== JDK安装对应操作系统选择 ====================================================================
-JDKInstallSelect(){
-	echo -e "\033[32m┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\033[0m"
-	echo -e "\033[32m┠┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈ JDK 安装 ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┨\033[0m"
-	echo -e "\033[32m┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫\033[0m"
-	echo -e "\033[32m┃ [1]CentOS                      [2]Ubuntu   ┃\033[0m"
-	echo -e "\033[32m┃ [B]返回上级菜单                [Q]退出安装 ┃\033[0m"
-	echo -e "\033[32m┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\033[0m"
-
-	read -p "选择操作系统版本编号或直接输入:" val
-	case $val in
-		1)	system_version=CentOS
-			JDKInstall
-		;;
-		2)	system_version=Ubuntu
-			JDKInstall
-		;;
-		B|b)  allInstallMenu
-		;;
-		Q|q)  exit 0
-		;;
-	esac
-}
 
 #==================================================================== Supervisor安装 ====================================================================
 SupervisorInstall(){
@@ -792,6 +691,13 @@ SupervisorInstall(){
 
 	# 检查amoy路径
 	checkInstallPath
+
+	# 安装setuptools
+	tar -xvf $all_package_path/setuptools-0.6c11.tar.gz -C $all_package_path
+	cd $all_package_path/setuptools-0.6c11
+	echo "123456"|sudo -S python setup.py build
+	echo "123456"|sudo -S python setup.py install
+	echo "123456"|sudo -S ls -l /usr/lib/python2.6/site-packages/setuptools-0.6c11-py2.6.egg
 
 	# 检查java环境
 	java -version
@@ -920,149 +826,23 @@ SupervisorInstall(){
 
 #==================================================================== MySQL安装 ====================================================================
 MySQLInstall(){
-	# 检查旧版本
-	count=0
-	oldMySQL=`rpm -qa | grep -i mysql`
-	echo -e "\033[32m已安装列表:\033[0m"
-	echo -e "\033[32m$oldMySQL\033[0m"
-	sleep 3
-	if [ ! -n "$oldMySQL" ]; then
-		echo -e "\033[32m旧版本 MySQL 已经卸载\033[0m"
-	else
-		echo -e "\033[31m关闭MySQL...\033[0m"
-		# 关闭Mysql
-		MySQLStatus=`sudo service mysql status`
-		status=`echo ${MySQLStatus%!*}`
-		if [ "$status" == "SUCCESS" ]; then
-			echo -e "\033[32mMySQL 正在关闭...请等待...\033[0m"
-			echo "123456"|sudo -S su - root -c "service mysql stop"
-		else
-			echo -e "\033[32mMySQL 已经关闭\033[0m"
-		fi
-		# 卸载旧版本Mysql
-		echo -e "\033[31m开始卸载旧版本...请稍等...\033[0m"
-		sleep 1
-		echo "123456"|sudo -S su - root -c "yum -y remove mysql-libs-5.1.73-7.el6.x86_64"
-		echo "123456"|sudo -S su - root -c "yum -y remove MySQL-server-5.6.36-1.el6.x86_64"
-		echo "123456"|sudo -S su - root -c "yum -y remove MySQL-client-5.6.36-1.el6.x86_64"
-		echo "123456"|sudo -S su - root -c "yum -y remove MySQL-embedded-5.6.36-1.el6.x86_64"
-		echo "123456"|sudo -S su - root -c "yum -y remove MySQL-shared-5.6.36-1.el6.x86_64"
-		echo "123456"|sudo -S su - root -c "yum -y remove MySQL-test-5.6.36-1.el6.x86_64"
-		echo "123456"|sudo -S su - root -c "yum -y remove MySQL-devel-5.6.36-1.el6.x86_64"
-		echo "123456"|sudo -S su - root -c "yum -y remove MySQL-shared-compat-5.6.36-1.el6.x86_64"
-
-		echo "123456"|sudo -S rm -rf /var/lib/mysql
-		echo "123456"|sudo -S rm -rf /usr/lib64/mysql
-		echo "123456"|sudo -S rm -rf /usr/share/mysql
-		echo "123456"|sudo -S rm -rf /etc/my.cnf
-
-		if [ $? -eq 0 ]; then
-			let count+=1
-			echo -e "\033[32mMySQL 卸载成功\033[0m"
-		else
-			echo -e "\033[31mMySQL 卸载失败\033[0m"
-			return
-		fi
-	fi
-
-	# 解压
-	if [ ! -d $all_package_path/MySQL-server-5.6.36-1.el6.x86_64.rpm ]; then
-		if [ ! -f $all_package_path/MySQL-5.6.36-1.el6.x86_64.rpm-bundle.tar ]; then
-			echo -e "\033[31m错误：MySQL-5.6.36-1.el6.x86_64.rpm-bundle.tar压缩包不存在，先将压缩包拷贝至$all_package_path路径下！\033[0m"
-			return
-		else
-			tar xvf $all_package_path/MySQL-5.6.36-1.el6.x86_64.rpm-bundle.tar -C $all_package_path
-			if [ $? -eq 0 ]; then
-				let count+=1
-				echo -e "\033[32mMySQL-5.6.36-1.el6.x86_64.rpm-bundle.tar 解压成功\033[0m"
-			else
-				echo -e "\033[31mMySQL-5.6.36-1.el6.x86_64.rpm-bundle.tar 解压失败\033[0m"
-				return
-			fi
-			sleep 2
-		fi
-	else
-		echo -e "\033[32mMySQL-5.6.36-1.el6.x86_64.rpm-bundle.tar 已经解压\033[0m"
-	fi
-	echo -e "\033[32m开始安装 MySQL\033[0m"
-	sleep 1
-	echo "123456"|sudo -S rpm -ivh --nodeps --force $all_package_path/MySQL-client-5.6.36-1.el6.x86_64.rpm
-	echo "123456"|sudo -S rpm -ivh --nodeps --force $all_package_path/MySQL-devel-5.6.36-1.el6.x86_64.rpm
-	echo "123456"|sudo -S rpm -ivh --nodeps --force $all_package_path/MySQL-embedded-5.6.36-1.el6.x86_64.rpm
-	echo "123456"|sudo -S rpm -ivh --nodeps --force $all_package_path/MySQL-server-5.6.36-1.el6.x86_64.rpm
-	echo "123456"|sudo -S rpm -ivh --nodeps --force $all_package_path/MySQL-shared-5.6.36-1.el6.x86_64.rpm
-	echo "123456"|sudo -S rpm -ivh --nodeps --force $all_package_path/MySQL-shared-compat-5.6.36-1.el6.x86_64.rpm
-	echo "123456"|sudo -S rpm -ivh --nodeps --force $all_package_path/MySQL-test-5.6.36-1.el6.x86_64.rpm
-	if [ $? -eq 0 ]; then
-		let count+=1
-		echo -e "\033[32mMySQL 压缩包安装完成\033[0m"
-	else
-		echo -e "\033[31mMySQL 压缩包安装失败\033[0m"
-		return
-	fi
+	tar -xvf $all_package_path/mysql-ubuntu.tar.gz -C $all_package_path
+	echo "123456"|sudo -S dpkg -i --force-depends $all_package_path/mysql-ubuntu/*.deb
 
 	# 设置开机自启
 	echo "123456"|sudo -S chkconfig mysql on
 	# 配置my.cnf文件
-	if [ ! -f /etc/my.cnf ]; then
-		echo "123456"|sudo -S su - root -c "echo "[mysqld]" >> /home/yuantiaotech/my.cnf"
-		echo "123456"|sudo -S sed -i '$adatadir=/var/lib/mysql' /home/yuantiaotech/my.cnf
-		echo "123456"|sudo -S sed -i '$asocket=/var/lib/mysql/mysql.sock' /home/yuantiaotech/my.cnf
-		echo "123456"|sudo -S sed -i '$auser=mysql' /home/yuantiaotech/my.cnf
-		echo "123456"|sudo -S sed -i '$alower_case_table_names=1' /home/yuantiaotech/my.cnf
-		echo "123456"|sudo -S sed -i '$acharacter_set_server=utf8' /home/yuantiaotech/my.cnf
-		echo "123456"|sudo -S sed -i '$a# Disabling symbolic-links is recommended to prevent assorted security risks' /home/yuantiaotech/my.cnf
-		echo "123456"|sudo -S sed -i '$asymbolic-links=0' /home/yuantiaotech/my.cnf
-		echo "123456"|sudo -S sed -i '$askip-name-resolve' /home/yuantiaotech/my.cnf
-		echo "123456"|sudo -S sed -i '$a[mysqld_safe]' /home/yuantiaotech/my.cnf
-		echo "123456"|sudo -S sed -i '$alog-error=/var/log/mysqld.log' /home/yuantiaotech/my.cnf
-		echo "123456"|sudo -S sed -i '$apid-file=/var/run/mysqld/mysqld.pid' /home/yuantiaotech/my.cnf
-		echo "123456"|sudo -S mv /home/yuantiaotech/my.cnf /etc
-		echo "123456"|sudo -S chmod 644 /etc/my.cnf
+	echo "123456"|sudo -S sed -i '/\[mysqld\]/a\\lower_case_table_names=1' /etc/mysql/my.cnf
+	echo "123456"|sudo -S sed -i "/\[mysqld\]/a\\character-set-server=utf8" /etc/mysql/my.cnf
+	echo "123456"|sudo -S sed -i "/\[mysqld\]/a\\collation-server=utf8_general_ci" /etc/mysql/my.cnf
+	echo "123456"|sudo -S sed -i '/\[mysqld\]/a\\skip-name-resolve' /etc/mysql/my.cnf
+	echo "123456"|sudo -S sed -i '/\[client\]/a\\default-character-set=utf8' /etc/mysql/my.cnf
 
-		if [ $? -eq 0 ]; then
-			let count+=1
-			echo -e "\033[32m/etc/my.cnf 创建成功\033[0m"
-		else
-			echo -e "\033[31m/etc/my.cnf 创建失败\033[0m"
-		fi
-	else
-		let count+=1
-		echo -e "\033[32m/etc/my.cnf 文件已经存在\033[0m"
-	fi
+	sed -i "s/bind-address/#bind-address/g" /etc/mysql/my.cnf
 
-	if [ "$count" == 4 ]; then
-		echo -e "\033[32mMySQL --------------------------- [安装成功]\033[0m"
-		# 启动Mysql
-		echo -e "\033[32m正在启动 MySQL...\033[0m"
-		sleep 2
-		echo "123456"|sudo -S service mysql start
-	elif [ "$count" != 4 ]; then
-		echo -e "\033[31mMySQL --------------------------- [安装失败]\033[0m"
-	fi
-	
-	# 修改/etc/hosts
-	myIP=`ifconfig | grep "inet addr:"|head -n 1 | awk '{print $2}' | sed 's/addr://g'`
-	myHostName=`hostname`
-	if cat /etc/hosts | grep $myHostName >/dev/null
-	then
-		echo -e "\033[32m/etc/hosts 已经添加主机名：$myHostName\033[0m"
-	else
-		echo "123456"|sudo -S sed -i '$a'$(echo $myIP)'    '$(echo $myHostName)'' /etc/hosts
-	fi
+	echo "123456"|sudo -S chmod 644 /etc/mysql/my.cnf
 
-	# 显示初始密码
-	pwdFile=`sudo cat /root/.mysql_secret`
-	initPwd=${pwdFile##*: }
-	echo -e "\033[32mMySQL 初始密码:${initPwd}\033[0m"
-
-	# 修改初始密码
-	mysqladmin -uroot -p${initPwd} password 123456
-	if [ $? -eq 0 ]; then
-		echo -e "\033[32mMySQL 初始密码修改成功\033[0m"
-	else
-		echo -e "\033[31mMySQL 初始密码修改失败\033[0m"
-	fi
+	echo "123456"|sudo -S service mysql restart
 
 	# 开启远程访问权限
 	mysql -uroot -p123456 <<EOF
@@ -1079,73 +859,27 @@ EOF
 	fi
 }
 
-#==================================================================== Oracle安装配置卸载选项 ====================================================================
-OracleInstallSelect(){
-	echo -e "\033[32m┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\033[0m"
-	echo -e "\033[32m┠┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈ Oracle ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┨\033[0m"
-	echo -e "\033[32m┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫\033[0m"
-	echo -e "\033[32m┃ [1]Oracle安装                [2]Oracle配置 ┃\033[0m"
-	echo -e "\033[32m┃ [3]Oracle卸载                              ┃\033[0m"
-	echo -e "\033[32m┃ [B]返回主菜单                [Q]退出安装   ┃\033[0m"
-	echo -e "\033[32m┃                                            ┃\033[0m"
-	echo -e "\033[32m┃ *完整安装Oracle需包含[1][2]两步            ┃\033[0m"
-	echo -e "\033[32m┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\033[0m"
-
-	read -p "请选择:" val
-	case $val in
-		1)	OracleInstall
-		;;
-		2)	OracleConfigure
-		;;
-		3)	OracleUninstall
-		;;
-		B|b)  allInstallMenu
-		;;
-		Q|q)  exit 0
-		;;
-		*)  echo -e "\033[31m输入有误\033[0m"
-			return
-		;;
-	esac
-}
-
 #==================================================================== Oracle安装 ====================================================================
-OracleInstall(){
-	# 卸载Oracle
-	if [ "$ORACLE_HOME" != "" ]; then
-		OracleUninstall
-	fi
-	
+OracleInstall(){	
 	# 解压依赖包
-	if [ ! -d $all_package_path/centos6.8_oracle11gPackages ]; then
-		if [ ! -f $all_package_path/centos6.8_oracle11gPackages.tar.gz ]; then
-			echo -e "\033[31m错误：centos6.8_oracle11gPackages.tar压缩包不存在，先将压缩包拷贝至$all_package_path路径下！\033[0m"
+	if [ ! -d $all_package_path/ubuntu_oracle11gPackages ]; then
+		if [ ! -f $all_package_path/ubuntu_oracle11gPackages.tar.gz ]; then
+			echo -e "\033[31m错误：ubuntu_oracle11gPackages.tar.gz压缩包不存在，先将压缩包拷贝至$all_package_path路径下！\033[0m"
 			return
 		else
-			tar zxvf $all_package_path/centos6.8_oracle11gPackages.tar.gz -C $all_package_path
+			tar zxvf $all_package_path/ubuntu_oracle11gPackages.tar.gz -C $all_package_path
 			if [ $? -eq 0 ]; then
-				echo -e "\033[32mcentos6.8_oracle11gPackages.tar 解压成功\033[0m"
+				echo -e "\033[32mubuntu_oracle11gPackages.tar.gz 解压成功\033[0m"
 			else
-				echo -e "\033[31mcentos6.8_oracle11gPackages.tar 解压失败\033[0m"
+				echo -e "\033[31mubuntu_oracle11gPackages.tar.gz 解压失败\033[0m"
 				return
 			fi
 			sleep 3
 		fi
 	else
-		echo -e "\033[32mmcentos6.8_oracle11gPackages 已经存在\033[0m"
+		echo -e "\033[32mmubuntu_oracle11gPackages 已经存在\033[0m"
 	fi
-	echo "123456"|sudo -S rpm -ivh $all_package_path/centos6.8_oracle11gPackages/part1/*.rpm --force --nodeps
-	echo "123456"|sudo -S rpm -ivh $all_package_path/centos6.8_oracle11gPackages/part2_xhost/*.rpm --force --nodeps
-
-	# 修改/etc/hosts
-	myIP=`ifconfig | grep "inet addr:"|head -n 1 | awk '{print $2}' | sed 's/addr://g'`
-	myHostName=`hostname`
-	if cat /etc/hosts | grep $myHostName >/dev/null
-	then
-		echo -e "\033[32m/etc/hosts 已经添加主机名：$myHostName\033[0m"
-	else
-		echo "123456"|sudo -S sed -i '$a'$(echo $myIP)'    '$(echo $myHostName)'' /etc/hosts
-	fi
+	echo "123456"|sudo -S dpkg -i --force-depends $all_package_path/ubuntu_oracle11gPackages/*.deb
 	
 	# 配置内核参数及用户限制 /etc/sysctl.conf
 	if cat /etc/sysctl.conf | grep Oracle11gR2 >/dev/null
@@ -1155,8 +889,8 @@ OracleInstall(){
 		echo "123456"|sudo -S sed -i '$a# Oracle11gR2 kernel parameters' /etc/sysctl.conf
 		echo "123456"|sudo -S sed -i '$afs.aio-max-nr=1048576' /etc/sysctl.conf
 		echo "123456"|sudo -S sed -i '$afs.file-max=6815744' /etc/sysctl.conf
-		echo "123456"|sudo -S sed -i '$akernel.shmall = 2097152' /etc/sysctl.conf
-		echo "123456"|sudo -S sed -i '$akernel.shmmni = 4096' /etc/sysctl.conf
+		echo "123456"|sudo -S sed -i '$akernel.shmall=2097152' /etc/sysctl.conf
+		echo "123456"|sudo -S sed -i '$akernel.shmmni=4096' /etc/sysctl.conf
 		echo "123456"|sudo -S sed -i '$akernel.sem=250	32000	100	128' /etc/sysctl.conf
 		echo "123456"|sudo -S sed -i '$akernel.shmmax=2147483648' /etc/sysctl.conf
 		echo "123456"|sudo -S sed -i '$anet.ipv4.ip_local_port_range=9000 65500' /etc/sysctl.conf
@@ -1358,20 +1092,6 @@ OracleConfigure(){
 
 	echo -e "\033[32m正在检查配置...请等待...\033[0m"
 	sleep 1
-	myHostName=`hostname`
-	if cat $ORACLE_HOME/network/admin/listener.ora | grep $myHostName >/dev/null
-		then
-		echo -e "\033[32mlistener.ora 主机名配置正确\033[0m"
-	else
-		echo -e "\033[31mlistener.ora 主机名配置错误\033[0m"
-	fi
-
-	if cat $ORACLE_HOME/network/admin/tnsnames.ora | grep $myHostName >/dev/null
-		then
-		echo -e "\033[32mtnsnames.ora 主机名配置正确\033[0m"
-	else
-		echo -e "\033[31mtnsnames.ora 主机名配置错误\033[0m"
-	fi
 
 	echo -e "\033[32m开始创建amoy用户及配置内存等...请等待...\033[0m"
 	# 创建amoy用户及配置
@@ -1393,9 +1113,6 @@ OracleConfigure(){
 	exit
 EOF
 
-	# 还原系统版本信息
-	echo "123456"|sudo -S su - root -c "echo 'CentOS release 6.8 (Final)' > /etc/redhat-release"
-
 	if [ $? -eq 0 ]; then
 		echo -e "\033[32mOracle 配置成功\033[0m"
 	else
@@ -1404,139 +1121,32 @@ EOF
 	fi
 }
 
-#==================================================================== Oracle卸载确认 ====================================================================
-OracleUninstallSelect(){
-	read -p "正在删除Oracle，是否确定[Y/N]:" val
+#==================================================================== Oracle安装、配置选项 ====================================================================
+OracleInstallSelect(){
+	echo -e "\033[32m┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\033[0m"
+	echo -e "\033[32m┠┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈ Oracle ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┨\033[0m"
+	echo -e "\033[32m┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫\033[0m"
+	echo -e "\033[32m┃ [1]Oracle安装                [2]Oracle配置 ┃\033[0m"
+	echo -e "\033[32m┃ [B]返回主菜单                [Q]退出安装   ┃\033[0m"
+	echo -e "\033[32m┃                                            ┃\033[0m"
+	echo -e "\033[32m┃ *完整安装Oracle需包含[1][2]两步            ┃\033[0m"
+	echo -e "\033[32m┃ *卸载操作请谨慎使用！做好数据备份！        ┃\033[0m"
+	echo -e "\033[32m┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\033[0m"
+
+	read -p "请选择:" val
 	case $val in
-		Y|y)  OracleUninstall
+		1)	OracleInstall
 		;;
-		N|n)  allInstallMenu
+		2)	OracleConfigure
 		;;
-		*)	echo -e "\033[31m输入有误\033[0m"
+		B|b)  allInstallMenu
+		;;
+		Q|q)  exit 0
+		;;
+		*)  echo -e "\033[31m输入有误\033[0m"
 			return
 		;;
 	esac
-}
-
-#==================================================================== Oracle卸载 ====================================================================
-OracleUninstall(){
-	# 关闭Oracle
-	if [ -f /opt/app/oracle/product/11.2.0/dbhome_1/bin/sqlplus ]; then
-		echo -e "\033[32m关闭Oracle...\033[0m"
-		sqlplus /nolog <<EOF
-		connect / as sysdba;
-		shutdown immediate;
-		exit
-EOF
-	fi
-
-	# 关闭Oralce监听
-	if [ -f /opt/app/oracle/product/11.2.0/dbhome_1/bin/lsnrctl ]; then	
-		echo "123456"|sudo -S su - root -c "lsnrctl stop"
-	fi
-	echo -e "\033[32m开始卸载Oracle\033[0m"
-	count=0
-	# 删除安装路径
-	echo "123456"|sudo -S su - root -c "rm -rf /opt/app"
-	echo "123456"|sudo -S su - root -c "rm -rf /opt/ORCLfmap"
-	if [ $? -eq 0 ]; then
-		let count+=1
-		echo -e "\033[32mOracle 安装路径删除成功\033[0m"
-	else
-		echo -e "\033[31mOracle 安装路径删除失败\033[0m"
-	fi
-
-	# 删除/usr/local/bin下三个文件夹
-	echo "123456"|sudo -S su - root -c "rm -rf /usr/local/bin/dbhome"
-	echo "123456"|sudo -S su - root -c "rm -rf /usr/local/bin/oraenv"
-	echo "123456"|sudo -S su - root -c "rm -rf /usr/local/bin/coraenv"
-	if [ $? -eq 0 ]; then
-		echo -e "\033[32m/usr/local/bin 下配置文件夹删除成功\033[0m"
-		let count+=1
-	else
-		echo -e "\033[31m/usr/local/bin 下配置文件夹删除失败\033[0m"
-	fi
-
-	# 删除/etc下文件
-	echo "123456"|sudo -S su - root -c "rm -f /etc/oratab"
-	echo "123456"|sudo -S su - root -c "rm -f /etc/oraInst.loc"
-	if [ $? -eq 0 ]; then
-		echo -e "\033[32m/etc/ 下配置文件夹删除成功\033[0m"
-		let count+=1
-	else
-		echo -e "\033[31m/etc/ 下配置文件夹删除失败\033[0m"
-	fi
-
-	# 删除配置
-	if cat /etc/sysctl.conf | grep Oracle11gR2 >/dev/null
-		then
-		echo "123456"|sudo -S sed -i '/Oracle11gR2/d' /etc/sysctl.conf
-		echo "123456"|sudo -S sed -i '/fs.aio-max-nr/d' /etc/sysctl.conf
-		echo "123456"|sudo -S sed -i '/fs.file-max/d' /etc/sysctl.conf
-		echo "123456"|sudo -S sed -i '/kernel.shmall/d' /etc/sysctl.conf
-		echo "123456"|sudo -S sed -i '/kernel.shmmni/d' /etc/sysctl.conf
-		echo "123456"|sudo -S sed -i '/kernel.sem/d' /etc/sysctl.conf
-		echo "123456"|sudo -S sed -i '/kernel.shmmax/d' /etc/sysctl.conf
-		echo "123456"|sudo -S sed -i '/net.ipv4.ip_local_port_range/d' /etc/sysctl.conf
-		echo "123456"|sudo -S sed -i '/net.core.rmem_default/d' /etc/sysctl.conf
-		echo "123456"|sudo -S sed -i '/net.core.rmem_max/d' /etc/sysctl.conf
-		echo "123456"|sudo -S sed -i '/net.core.wmem_default/d' /etc/sysctl.conf
-		echo "123456"|sudo -S sed -i '/net.core.wmem_max/d' /etc/sysctl.conf
-		echo -e "\033[32m/etc/sysctl.conf 中Oracle配置删除成功\033[0m"
-	else
-		echo -e "\033[32m/etc/sysctl.conf 中Oracle配置不存在\033[0m"
-	fi
-
-	if cat /etc/security/limits.conf | grep Oracle11gR2 >/dev/null
-		then
-		echo "123456"|sudo -S sed -i '/Oracle11gR2/d' /etc/security/limits.conf
-		echo "123456"|sudo -S sed -i '/yuantiaotech soft nproc 2048/d' /etc/security/limits.conf
-		echo "123456"|sudo -S sed -i '/yuantiaotechhard nproc 16384/d' /etc/security/limits.conf
-		echo "123456"|sudo -S sed -i '/yuantiaotechsoft nofile 1024/d' /etc/security/limits.conf
-		echo "123456"|sudo -S sed -i '/yuantiaotechhard nofile 65536/d' /etc/security/limits.conf
-		echo "123456"|sudo -S sed -i '/yuantiaotechsoft stack 10240/d' /etc/security/limits.conf
-		echo -e "\033[32m/etc/security/limits.conf 中Oracle配置删除成功\033[0m"
-	else
-		echo -e "\033[32m/etc/security/limits.conf 中Oracle配置不存在\033[0m"
-	fi
-
-	if cat /etc/pam.d/su | grep Oracle11gR2 >/dev/null
-		then
-		echo "123456"|sudo -S sed -i '/Oracle11gR2/d' /etc/pam.d/su
-		echo "123456"|sudo -S sed -i '/session required pam_limits.so/d' /etc/pam.d/su
-		echo -e "\033[32m/etc/pam.d/su 中Oracle配置删除成功\033[0m"
-	else
-		echo -e "\033[32m/etc/pam.d/su 中Oracle配置不存在\033[0m"
-	fi
-
-	if cat /etc/pam.d/login | grep Oracle11gR2 >/dev/null
-		then
-		echo "123456"|sudo -S sed -i '/Oracle11gR2/d' /etc/pam.d/login
-		echo "123456"|sudo -S sed -i '/session required pam_limits.so/d' /etc/pam.d/login
-		echo -e "\033[32m/etc/pam.d/login 中Oracle配置删除成功\033[0m"
-	else
-		echo -e "\033[32m/etc/pam.d/login 中Oracle配置不存在\033[0m"
-	fi
-
-	if cat /etc/profile | grep Oracle11gR2 >/dev/null
-		then
-		echo "123456"|sudo -S sed -i '/Oracle11gR2/d' /etc/profile
-		echo "123456"|sudo -S sed -i '/export ORACLE_BASE/d' /etc/profile
-		echo "123456"|sudo -S sed -i '/export ORACLE_HOME/d' /etc/profile
-		echo "123456"|sudo -S sed -i '/export ORACLE_OWNER/d' /etc/profile
-		echo "123456"|sudo -S sed -i '/export ORACLE_SID/d' /etc/profile
-		echo "123456"|sudo -S sed -i '/export NLS_LANG=.AL32UTF8/d' /etc/profile
-		echo "123456"|sudo -S sed -i '/export PATH=\$PATH:\$ORACLE_HOME\/bin/d' /etc/profile
-		echo -e "\033[32m/etc/profile 中Oracle配置删除成功\033[0m"
-	else
-		echo -e "\033[32m/etc/profile 中Oracle配置不存在\033[0m"
-	fi
-
-	if [ "$count" == 3 ]; then
-		echo -e "\033[32mOracle --------------------------- [卸载成功]\033[0m"
-	elif [ "$count" != 3 ]; then
-		echo -e "\033[31mOracle --------------------------- [卸载失败]\033[0m"
-	fi
 }
 
 #==================================================================== Strom ====================================================================
@@ -1640,41 +1250,33 @@ StormInstall(){
 #==================================================================== 关闭防火墙 ====================================================================
 closeFirewall(){
 	# 关闭防火墙
-	echo "123456"|sudo -S service iptables status
-	if [ $? -eq 0 ]; then
-		echo -e "\033[32m正在关闭防火墙...\033[0m"
-		sleep 1
-		echo "123456"|sudo -S service iptables stop
-		if [ $? -eq 0 ]; then
-			echo -e "\033[32m临时关闭防火墙成功\033[0m"
-		else
-			echo -e "\033[31m临时关闭防火墙失败\033[0m"
-		fi
+	echo "123456"|sudo -S ufw disable
+}
 
-		echo "123456"|sudo -S chkconfig iptables off
-		if [ $? -eq 0 ]; then
-			echo -e "\033[32m永久关闭防火墙成功，重启后生效\033[0m"
+#==================================================================== NTP安装 ====================================================================
+NTPInstall(){
+	NTPPackageName=NTP.tar.gz
+	NTPFileName=NTP
+	# 解压依赖包
+	if [ ! -d $all_package_path/$NTPFileName ]; then
+		if [ ! -f $all_package_path/$NTPPackageName ]; then
+			echo -e "\033[31m错误：$NTPPackageName压缩包不存在，先将压缩包拷贝至$all_package_path路径下！\033[0m"
+			return
 		else
-			echo -e "\033[31m永久关闭防火墙失败\033[0m"
+			tar zxvf $all_package_path/$NTPPackageName -C $all_package_path
+			if [ $? -eq 0 ]; then
+				echo -e "\033[32m$NTPPackageName 解压成功\033[0m"
+			else
+				echo -e "\033[31m$NTPPackageName 解压失败\033[0m"
+				return
+			fi
+			sleep 2
 		fi
-    else 
-    	echo -e "\033[32m防火墙已经关闭\033[0m"
-    fi
-
-	# 关闭SELINUX
-	sleep 1
-	if cat /etc/selinux/config | grep SELINUX=disabled >/dev/null
-		then
-		echo -e "\033[32mSELINUX 已经关闭\033[0m"
 	else
-		echo -e "\033[32m正在关闭SELINUX...\033[0m"
-		echo "123456"|sudo -S sed -i "s/SELINUX=enforcing/SELINUX=disabled/g" /etc/selinux/config
-		if [ $? -eq 0 ]; then
-			echo -e "\033[32mSELINUX 关闭成功，重启服务器后生效\033[0m"
-		else
-			echo -e "\033[31mSELINUX 关闭失败\033[0m"
-		fi
+		echo -e "\033[32mm$NTPFileName 已经存在\033[0m"
 	fi
+
+	echo "123456"|sudo -S dpkg -i --force-depends $all_package_path/NTP/*.deb
 }
 
 #==================================================================== 检查/home/yuantiaotech/amoy路径是否存在 ====================================================================
@@ -1695,14 +1297,15 @@ checkInstallPath(){
 
 #==================================================================== 主菜单 ====================================================================
 allInstallMenu(){
+ 	echo "123456"|sudo -S ln -s /usr/lib/insserv/insserv  /sbin/insserv
 	echo -e "\033[32m┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\033[0m"
 	echo -e "\033[32m┣━━━━━━━━━━━━━━━━━━ 主菜单 ━━━━━━━━━━━━━━━━━━┫\033[0m"
 	echo -e "\033[32m┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫\033[0m"
-	echo -e "\033[32m┃ [1]创建/删除用户             [2]JDK        ┃\033[0m"
-	echo -e "\033[32m┃ [3]Supervisor                [4]MySQL      ┃\033[0m"
-	echo -e "\033[32m┃ [5]Oracle                    [6]Storm      ┃\033[0m"
-	echo -e "\033[32m┃ [7]Tomcat                    [8]Dataserver ┃\033[0m"
-	echo -e "\033[32m┃ [9]关闭防火墙                              ┃\033[0m"
+	echo -e "\033[32m┃ [1]关闭防火墙             [2]创建/删除用户 ┃\033[0m"
+	echo -e "\033[32m┃ [3]NTP                    [4]JDK           ┃\033[0m"
+	echo -e "\033[32m┃ [5]Supervisor             [6]MySQL         ┃\033[0m"
+	echo -e "\033[32m┃ [7]Oracle                 [8]Storm         ┃\033[0m"
+	echo -e "\033[32m┃ [9]Tomcat                 [10]Dataserver   ┃\033[0m"
 	echo -e "\033[32m┃ [Q]退出安装                                ┃\033[0m"	
 	echo -e "\033[32m┃                                            ┃\033[0m"	
 	echo -e "\033[32m┃ *请根据菜单提示选择相应编号                ┃\033[0m"
@@ -1711,23 +1314,25 @@ allInstallMenu(){
 	#stty erase ^H
 	read -p "选择需要安装的软件编号:" val
 	case $val in
-		1)	UserSelect
+		1)	closeFirewall
 		;;
-		2)  JDKInstallSelect
+		2)	UserSelect
 		;;
-		3)	SupervisorInstall
+		3)  JDKInstall
 		;;
-		4)	MySQLInstall
+		4)	SupervisorInstall
 		;;
-		5)	OracleInstallSelect
+		5)	MySQLInstall
 		;;
-		6)	StormInstall
+		6)	OracleInstallSelect
 		;;
-		7)	tomcatInstallSelect
+		7)	StormInstall
+		;;
+		8)	tomcatInstallSelect
  		;;
-		8)	dataserverInstallSelect
+		9)	dataserverInstallSelect
 		;;
-		9)	closeFirewall
+		10) NTPInstall
 		;;
 		Q|q)  exit 0
 		;;

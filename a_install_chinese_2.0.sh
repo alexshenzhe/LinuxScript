@@ -81,12 +81,12 @@ tomcatInstall(){
 	    echo -e "\033[32m/etc/profile TOMCAT_HOME_$system_name 已经配置\033[0m"	
 	else
 	    echo -e "\033[32m/etc/profile 中配置 tomcat_$system_name"
-		echo "123456"|sudo -s sed -i '$a##########'$(echo $system_name)' tomcat##########' /etc/profile
-		echo "123456"|sudo -s sed -i '$aTOMCAT_HOME_'$(echo $system_name)'='$(echo $tomcat_file_path)'' /etc/profile
-		echo "123456"|sudo -s sed -i '$aCATALINA_HOME_'$(echo $system_name)'='$(echo $tomcat_file_path)'' /etc/profile
-		echo "123456"|sudo -s sed -i '$aCATALINA_BASE_'$(echo $system_name)'='$(echo $tomcat_file_path)'' /etc/profile
-		echo "123456"|sudo -s sed -i '$aexport TOMCAT_HOME_'$(echo $system_name)'  CATALINA_HOME_'$(echo $system_name)'  CATALINA_BASE_'$(echo $system_name)'' /etc/profile
-		echo "123456"|sudo -s sed -i '$a##########'$(echo $system_name)' tomcat##########' /etc/profile
+		echo "123456"|sudo -S sed -i '$a##########'$(echo $system_name)' tomcat##########' /etc/profile
+		echo "123456"|sudo -S sed -i '$aTOMCAT_HOME_'$(echo $system_name)'='$(echo $tomcat_file_path)'' /etc/profile
+		echo "123456"|sudo -S sed -i '$aCATALINA_HOME_'$(echo $system_name)'='$(echo $tomcat_file_path)'' /etc/profile
+		echo "123456"|sudo -S sed -i '$aCATALINA_BASE_'$(echo $system_name)'='$(echo $tomcat_file_path)'' /etc/profile
+		echo "123456"|sudo -S sed -i '$aexport TOMCAT_HOME_'$(echo $system_name)'  CATALINA_HOME_'$(echo $system_name)'  CATALINA_BASE_'$(echo $system_name)'' /etc/profile
+		echo "123456"|sudo -S sed -i '$a##########'$(echo $system_name)' tomcat##########' /etc/profile
 
 		if cat /etc/profile | grep CATALINA_HOME_$system_name >/dev/null
 			then
@@ -249,7 +249,7 @@ supermapInstall(){
 			sleep 2
 
 			# 安装依赖包
-			echo "123456"|sudo -s rpm -ivh --force --nodeps $all_packages_path/$DependentFileName/*.rpm
+			echo "123456"|sudo -S rpm -ivh --force --nodeps $all_packages_path/$DependentFileName/*.rpm
 
 			if [ $? -eq 0 ]; then
 				let count+=1
@@ -289,7 +289,7 @@ supermapInstall(){
 
 	regist_dir=$license/aksusbd-2.4.1-i386
 	echo $regist_dir
-	echo "123456"|sudo -s su - root -c "cd $regist_dir && ./dinst"
+	echo "123456"|sudo -S su - root -c "cd $regist_dir && ./dinst"
 
 	if [ $? ]; then
 		let count+=1
@@ -441,11 +441,11 @@ addUser(){
 	egrep "^$user_name" /etc/passwd >& /dev/null
 	if [ $? -ne 0 ]  
 		then  
-	    echo "123456"|sudo -s adduser $user_name 
-	    echo "123456"|sudo -s passwd $user_name --stdin &>/dev/null
-		echo "123456"|sudo -s chmod -v u+w /etc/sudoers
-		echo "123456"|sudo -s sed -i '$a'$(echo $user_name)'  ALL=(ALL)       ALL' /etc/sudoers
-		echo "123456"|sudo -s chmod -v u-w /etc/sudoers 
+	    echo "123456"|sudo -S adduser $user_name 
+	    echo "123456"|sudo -S passwd $user_name --stdin &>/dev/null
+		echo "123456"|sudo -S chmod -v u+w /etc/sudoers
+		echo "123456"|sudo -S sed -i '$a'$(echo $user_name)'  ALL=(ALL)       ALL' /etc/sudoers
+		echo "123456"|sudo -S chmod -v u-w /etc/sudoers 
 		
 		if [ $? -eq 0  ]; then
 			echo -e "\033[32m用户: $user_name --------------------------- [创建成功]\033[0m"
@@ -468,11 +468,11 @@ deleteUser(){
 	else
 		read -p "你正在删除用户：$user_name，是否确定[Y/N]:" val
 		case $val in
-			Y|y)  echo "123456"|sudo -s userdel -r $user_name
+			Y|y)  echo "123456"|sudo -S userdel -r $user_name
 				  if [ $? -eq 0  ]; then
-					echo "123456"|sudo -s chmod -v u+w /etc/sudoers
-				  	echo "123456"|sudo -s sed -i -e "/$user_name/d" /etc/sudoers
-				  	echo "123456"|sudo -s chmod -v u-w /etc/sudoers
+					echo "123456"|sudo -S chmod -v u+w /etc/sudoers
+				  	echo "123456"|sudo -S sed -i -e "/$user_name/d" /etc/sudoers
+				  	echo "123456"|sudo -S chmod -v u-w /etc/sudoers
 				  	echo -e "\033[32m用户: $user_name --------------------------- [删除成功]\033[0m"
 				  else
 				  	echo -e "\033[31m用户: $user_name --------------------------- [删除失败]\033[0m"
@@ -550,13 +550,13 @@ JDKInstall(){
 
 	# 卸载旧版本
 	echo -e "\033[31m开始卸载旧版本...请等待...\033[0m"
-	echo "123456"|sudo -s rpm -qa | grep java | xargs rpm -e --nodeps
+	echo "123456"|sudo -S rpm -qa | grep java | xargs rpm -e --nodeps
 	# 检查卸载情况
 	javaOld=`rpm -qa | grep java`
 	if [ "$javaOld" != "" ]; then
-		echo "123456"|sudo -s rpm -e --nodeps tzdata-java-2016c-1.el6.noarch
-		echo "123456"|sudo -s rpm -e --nodeps java-1.6.0-openjdk-1.6.0.38-1.13.10.4.el6.x86_64
-		echo "123456"|sudo -s rpm -e --nodeps java-1.7.0-openjdk-1.7.0.99-2.6.5.1.el6.x86_64
+		echo "123456"|sudo -S rpm -e --nodeps tzdata-java-2016c-1.el6.noarch
+		echo "123456"|sudo -S rpm -e --nodeps java-1.6.0-openjdk-1.6.0.38-1.13.10.4.el6.x86_64
+		echo "123456"|sudo -S rpm -e --nodeps java-1.7.0-openjdk-1.7.0.99-2.6.5.1.el6.x86_64
 	fi
 	
 	if cat /etc/profile | grep JAVA_HOME >/dev/null
@@ -564,11 +564,11 @@ JDKInstall(){
 		echo -e "\033[32mJDK 系统环境变量已经存在\033[0m"
 	else
 		# 修改系统环境变量
-		echo "123456"|sudo -s sed -i '$a########### JAVA Environment #############' /etc/profile
-		echo "123456"|sudo -s sed -i '$aexport JAVA_HOME='$(echo $JDKFilePath)'' /etc/profile
-		echo "123456"|sudo -s sed -i '$aexport JRE_HOME=$JAVA_HOME/jre' /etc/profile
-		echo "123456"|sudo -s sed -i '$aexport CLASSPATH=./:$JAVA_HOME/lib:$JAVA_HOME/jre/lib' /etc/profile
-		echo "123456"|sudo -s sed -i '$aexport PATH=$PATH:$JAVA_HOME/bin' /etc/profile
+		echo "123456"|sudo -S sed -i '$a########### JAVA Environment #############' /etc/profile
+		echo "123456"|sudo -S sed -i '$aexport JAVA_HOME='$(echo $JDKFilePath)'' /etc/profile
+		echo "123456"|sudo -S sed -i '$aexport JRE_HOME=$JAVA_HOME/jre' /etc/profile
+		echo "123456"|sudo -S sed -i '$aexport CLASSPATH=./:$JAVA_HOME/lib:$JAVA_HOME/jre/lib' /etc/profile
+		echo "123456"|sudo -S sed -i '$aexport PATH=$PATH:$JAVA_HOME/bin' /etc/profile
 		# 生效配置
 		source /etc/profile
 	fi
@@ -578,14 +578,14 @@ JDKInstall(){
 		echo -e "\033[32mJDK 用户环境变量已经存在\033[0m"
 	else
 		# 修改用户环境变量
-		echo "123456"|sudo -s sed -i '$a########### JAVA Environment #############' /home/yuantiaotech/.bashrc
-		echo "123456"|sudo -s sed -i '$aexport JAVA_HOME='$(echo $JDKFilePath)'' /home/yuantiaotech/.bashrc
-		echo "123456"|sudo -s sed -i '$aexport JRE_HOME=$JAVA_HOME/jre' /home/yuantiaotech/.bashrc
-		echo "123456"|sudo -s sed -i '$aexport CLASSPATH=./:$JAVA_HOME/lib:$JAVA_HOME/jre/lib' /home/yuantiaotech/.bashrc
-		echo "123456"|sudo -s sed -i '$aexport PATH=$PATH:$JAVA_HOME/bin' /home/yuantiaotech/.bashrc
+		echo "123456"|sudo -S sed -i '$a########### JAVA Environment #############' /home/yuantiaotech/.bashrc
+		echo "123456"|sudo -S sed -i '$aexport JAVA_HOME='$(echo $JDKFilePath)'' /home/yuantiaotech/.bashrc
+		echo "123456"|sudo -S sed -i '$aexport JRE_HOME=$JAVA_HOME/jre' /home/yuantiaotech/.bashrc
+		echo "123456"|sudo -S sed -i '$aexport CLASSPATH=./:$JAVA_HOME/lib:$JAVA_HOME/jre/lib' /home/yuantiaotech/.bashrc
+		echo "123456"|sudo -S sed -i '$aexport PATH=$PATH:$JAVA_HOME/bin' /home/yuantiaotech/.bashrc
 		# 生效配置
 		source /home/yuantiaotech/.bashrc
-		echo "123456"|sudo -s su - root -c "echo "JAVA_HOME=$JDKFilePath" >> /etc/environment"
+		echo "123456"|sudo -S su - root -c "echo "JAVA_HOME=$JDKFilePath" >> /etc/environment"
 		source /etc/environment
 	fi
 	
@@ -598,10 +598,10 @@ JDKInstall(){
 
 	# 添加JDK软链接，CDH安装时候需要
 	if [ ! -d /usr/java ]; then
-		echo "123456"|sudo -s mkdir /usr/java
+		echo "123456"|sudo -S mkdir /usr/java
 	fi
-	echo "123456"|sudo -s ln -s $JDKFilePath/ /usr/java/
-	echo "123456"|sudo -s mv /usr/java/$JDKFileName /usr/java/jdk1.7
+	echo "123456"|sudo -S ln -s $JDKFilePath/ /usr/java/
+	echo "123456"|sudo -S mv /usr/java/$JDKFileName /usr/java/jdk1.7
 
 	if [ "$count" == 2 ]; then
 		echo -e "\033[32mJDK --------------------------- [安装成功]\033[0m"
@@ -681,9 +681,9 @@ SupervisorInstall(){
 	
 	# 安装meld3-1.0.2
 	cd $installPath/$meldFileName/
-	echo "123456"|sudo -s chown -R yuantiaotech:yuantiaotech $installPath/$meldFileName
-	echo "123456"|sudo -s chmod -R 777 $installPath/$meldFileName
-	echo "123456"|sudo -s python setup.py install
+	echo "123456"|sudo -S chown -R yuantiaotech:yuantiaotech $installPath/$meldFileName
+	echo "123456"|sudo -S chmod -R 777 $installPath/$meldFileName
+	echo "123456"|sudo -S python setup.py install
 	if [ $? -eq 0 ]; then
 		let count+=1
 		echo -e "\033[32mmeld 安装完成\033[0m"
@@ -692,9 +692,9 @@ SupervisorInstall(){
 	fi
 	# 安装supervisor-3.3.1
 	cd $installPath/$supervisorFileName/
-	echo "123456"|sudo -s chown -R yuantiaotech:yuantiaotech $installPath/$supervisorFileName
-	echo "123456"|sudo -s chmod -R 777 $installPath/$supervisorFileName
-	echo "123456"|sudo -s python setup.py install
+	echo "123456"|sudo -S chown -R yuantiaotech:yuantiaotech $installPath/$supervisorFileName
+	echo "123456"|sudo -S chmod -R 777 $installPath/$supervisorFileName
+	echo "123456"|sudo -S python setup.py install
 	if [ $? -eq 0 ]; then
 		let count+=1
 		echo -e "\033[32msupervisor 安装完成\033[0m"
@@ -706,14 +706,14 @@ SupervisorInstall(){
 	echo "123456"|sudo -S mkdir -p /etc/supervisor/conf.d
 	
 	# 初始化supervisord.conf
-	echo "123456"|sudo -s su - root -c "echo_supervisord_conf > /etc/supervisor/supervisord.conf"
-	echo "123456"|sudo -s sed -i '$d' /etc/supervisor/supervisord.conf
-	echo "123456"|sudo -s sed -i '$d' /etc/supervisor/supervisord.conf
-	echo "123456"|sudo -s sed -i '$a[include]' /etc/supervisor/supervisord.conf
-	echo "123456"|sudo -s sed -i '$afiles = /etc/supervisor/conf.d/*.conf' /etc/supervisor/supervisord.conf
+	echo "123456"|sudo -S su - root -c "echo_supervisord_conf > /etc/supervisor/supervisord.conf"
+	echo "123456"|sudo -S sed -i '$d' /etc/supervisor/supervisord.conf
+	echo "123456"|sudo -S sed -i '$d' /etc/supervisor/supervisord.conf
+	echo "123456"|sudo -S sed -i '$a[include]' /etc/supervisor/supervisord.conf
+	echo "123456"|sudo -S sed -i '$afiles = /etc/supervisor/conf.d/*.conf' /etc/supervisor/supervisord.conf
 
 	# 拷贝启动脚本到/etc/init.d/
-	echo "123456"|sudo -s cp $all_packages_path/supervisord /etc/init.d/
+	echo "123456"|sudo -S cp $all_packages_path/supervisord /etc/init.d/
 	# 检测java路径配置
 	javaPath=$(echo "\"\$PATH:$JAVA_HOME/bin\"")
 	echo "当前java路径：$javaPath"
@@ -722,8 +722,8 @@ SupervisorInstall(){
 		let count+=1
 		echo -e "\033[32msupervisord 脚本JAVA路径配置正确\033[0m"
 	else
-		echo "123456"|sudo -s sed -i '/export PATH=/d'  /etc/init.d/supervisord
-	    echo "123456"|sudo -s sed -i '3a export PATH='$(echo $javaPath)'' /etc/init.d/supervisord
+		echo "123456"|sudo -S sed -i '/export PATH=/d'  /etc/init.d/supervisord
+	    echo "123456"|sudo -S sed -i '3a export PATH='$(echo $javaPath)'' /etc/init.d/supervisord
 	    if [ $? -eq 0 ]; then
 			let count+=1
 			echo -e "\033[32msupervisord 脚本JAVA路径配置成功\033[0m"
@@ -731,11 +731,11 @@ SupervisorInstall(){
 			echo -e "\033[31msupervisord 脚本JAVA路径配置失败\033[0m"
 		fi
 	fi
-	echo "123456"|sudo -s chmod 755 /etc/init.d/supervisord
+	echo "123456"|sudo -S chmod 755 /etc/init.d/supervisord
 	
 	# 开机自启
-	echo "123456"|sudo -s chkconfig --add supervisord
-	echo "123456"|sudo -s chkconfig supervisord on
+	echo "123456"|sudo -S chkconfig --add supervisord
+	echo "123456"|sudo -S chkconfig supervisord on
 
 	if [ $? -eq 0 ]; then
 		let count+=1
@@ -748,7 +748,7 @@ SupervisorInstall(){
 		echo -e "\033[32mSupervisor --------------------------- [安装成功]\033[0m"
 		echo -e "\033[32m正在启动 Supervisor...\033[0m"
 		sleep 2
-		echo "123456"|sudo -s service supervisord start
+		echo "123456"|sudo -S service supervisord start
 	elif [ "$count" != 6 ]; then
 		echo -e "\033[31mSupervisor --------------------------- [安装失败]\033[0m"
 	fi
@@ -812,29 +812,29 @@ MySQLUninstall(){
 		status=`echo ${MySQLStatus%!*}`
 		if [ "$status" == "SUCCESS" ]; then
 			echo -e "\033[32mMySQL 正在关闭...请等待...\033[0m"
-			echo "123456"|sudo -s su - root -c "service mysql stop"
+			echo "123456"|sudo -S su - root -c "service mysql stop"
 		else
 			echo -e "\033[32mMySQL 已经关闭\033[0m"
 		fi
 		# 卸载旧版本Mysql
 		echo -e "\033[31m开始卸载旧版本...请稍等...\033[0m"
 		sleep 1
-		echo "123456"|sudo -s su - root -c "yum -y remove mysql-libs-5.1.73-7.el6.x86_64"
-		echo "123456"|sudo -s su - root -c "yum -y remove MySQL-server-5.6.36-1.el6.x86_64"
-		echo "123456"|sudo -s su - root -c "yum -y remove MySQL-client-5.6.36-1.el6.x86_64"
-		echo "123456"|sudo -s su - root -c "yum -y remove MySQL-embedded-5.6.36-1.el6.x86_64"
-		echo "123456"|sudo -s su - root -c "yum -y remove MySQL-shared-5.6.36-1.el6.x86_64"
-		echo "123456"|sudo -s su - root -c "yum -y remove MySQL-test-5.6.36-1.el6.x86_64"
-		echo "123456"|sudo -s su - root -c "yum -y remove MySQL-devel-5.6.36-1.el6.x86_64"
-		echo "123456"|sudo -s su - root -c "yum -y remove MySQL-shared-compat-5.6.36-1.el6.x86_64"
+		echo "123456"|sudo -S su - root -c "yum -y remove mysql-libs-5.1.73-7.el6.x86_64"
+		echo "123456"|sudo -S su - root -c "yum -y remove MySQL-server-5.6.36-1.el6.x86_64"
+		echo "123456"|sudo -S su - root -c "yum -y remove MySQL-client-5.6.36-1.el6.x86_64"
+		echo "123456"|sudo -S su - root -c "yum -y remove MySQL-embedded-5.6.36-1.el6.x86_64"
+		echo "123456"|sudo -S su - root -c "yum -y remove MySQL-shared-5.6.36-1.el6.x86_64"
+		echo "123456"|sudo -S su - root -c "yum -y remove MySQL-test-5.6.36-1.el6.x86_64"
+		echo "123456"|sudo -S su - root -c "yum -y remove MySQL-devel-5.6.36-1.el6.x86_64"
+		echo "123456"|sudo -S su - root -c "yum -y remove MySQL-shared-compat-5.6.36-1.el6.x86_64"
 
 		# 删除MySQL路径
 		echo -e "\033[31m开始删除旧版本路径...请稍等...\033[0m"
 		sleep 1
-		echo "123456"|sudo -s rm -rf /var/lib/mysql
-		echo "123456"|sudo -s rm -rf /usr/lib64/mysql
-		echo "123456"|sudo -s rm -rf /usr/share/mysql
-		echo "123456"|sudo -s rm -rf /etc/my.cnf
+		echo "123456"|sudo -S rm -rf /var/lib/mysql
+		echo "123456"|sudo -S rm -rf /usr/lib64/mysql
+		echo "123456"|sudo -S rm -rf /usr/share/mysql
+		echo "123456"|sudo -S rm -rf /etc/my.cnf
 
 		if [ $? -eq 0 ]; then
 			let count+=1
@@ -873,13 +873,13 @@ MySQLInstall(){
 	fi
 	echo -e "\033[32m开始安装 MySQL\033[0m"
 	sleep 1
-	echo "123456"|sudo -s rpm -ivh --nodeps --force $all_packages_path/MySQL-client-5.6.36-1.el6.x86_64.rpm
-	echo "123456"|sudo -s rpm -ivh --nodeps --force $all_packages_path/MySQL-devel-5.6.36-1.el6.x86_64.rpm
-	echo "123456"|sudo -s rpm -ivh --nodeps --force $all_packages_path/MySQL-embedded-5.6.36-1.el6.x86_64.rpm
-	echo "123456"|sudo -s rpm -ivh --nodeps --force $all_packages_path/MySQL-server-5.6.36-1.el6.x86_64.rpm
-	echo "123456"|sudo -s rpm -ivh --nodeps --force $all_packages_path/MySQL-shared-5.6.36-1.el6.x86_64.rpm
-	echo "123456"|sudo -s rpm -ivh --nodeps --force $all_packages_path/MySQL-shared-compat-5.6.36-1.el6.x86_64.rpm
-	echo "123456"|sudo -s rpm -ivh --nodeps --force $all_packages_path/MySQL-test-5.6.36-1.el6.x86_64.rpm
+	echo "123456"|sudo -S rpm -ivh --nodeps --force $all_packages_path/MySQL-client-5.6.36-1.el6.x86_64.rpm
+	echo "123456"|sudo -S rpm -ivh --nodeps --force $all_packages_path/MySQL-devel-5.6.36-1.el6.x86_64.rpm
+	echo "123456"|sudo -S rpm -ivh --nodeps --force $all_packages_path/MySQL-embedded-5.6.36-1.el6.x86_64.rpm
+	echo "123456"|sudo -S rpm -ivh --nodeps --force $all_packages_path/MySQL-server-5.6.36-1.el6.x86_64.rpm
+	echo "123456"|sudo -S rpm -ivh --nodeps --force $all_packages_path/MySQL-shared-5.6.36-1.el6.x86_64.rpm
+	echo "123456"|sudo -S rpm -ivh --nodeps --force $all_packages_path/MySQL-shared-compat-5.6.36-1.el6.x86_64.rpm
+	echo "123456"|sudo -S rpm -ivh --nodeps --force $all_packages_path/MySQL-test-5.6.36-1.el6.x86_64.rpm
 	if [ $? -eq 0 ]; then
 		let count+=1
 		echo -e "\033[32mMySQL 压缩包安装完成\033[0m"
@@ -889,59 +889,59 @@ MySQLInstall(){
 	fi
 
 	# 设置开机自启
-	echo "123456"|sudo -s chkconfig mysql on
+	echo "123456"|sudo -S chkconfig mysql on
 	# 配置my.cnf文件
 	if [ ! -f /etc/my.cnf ]; then
-		echo "123456"|sudo -s su - root -c "echo "[mysqld]" >> /etc/my.cnf"
-		echo "123456"|sudo -s sed -i '$adatadir=/var/lib/mysql' /etc/my.cnf
-		echo "123456"|sudo -s sed -i '$asocket=/var/lib/mysql/mysql.sock' /etc/my.cnf
-		echo "123456"|sudo -s sed -i '$auser=mysql' /etc/my.cnf
-		echo "123456"|sudo -s sed -i '$aport=3306' /etc/my.cnf
-		echo "123456"|sudo -s sed -i '$alower_case_table_names=1' /etc/my.cnf
-		echo "123456"|sudo -s sed -i '$acharacter-set-server=utf8' /etc/my.cnf
-		echo "123456"|sudo -s sed -i '$asymbolic-links=0' /etc/my.cnf
-		echo "123456"|sudo -s sed -i '$askip-name-resolve' /etc/my.cnf
-		echo "123456"|sudo -s sed -i '$anet_write_timeout=600' /etc/my.cnf
-		echo "123456"|sudo -s sed -i '$await_timeout=31536000' /etc/my.cnf
-		echo "123456"|sudo -s sed -i '$ainteractive_timeout=31536000' /etc/my.cnf
-		echo "123456"|sudo -s sed -i '$acollation-server=utf8_general_ci' /etc/my.cnf
-		echo "123456"|sudo -s sed -i '$askip-external-locking' /etc/my.cnf
-		echo "123456"|sudo -s sed -i '$akey_buffer=512M' /etc/my.cnf
-		echo "123456"|sudo -s sed -i '$amax_allowed_packet=16M' /etc/my.cnf
-		echo "123456"|sudo -s sed -i '$athread_stack=192K' /etc/my.cnf
-		echo "123456"|sudo -s sed -i '$athread_cache_size=8' /etc/my.cnf
-		echo "123456"|sudo -s sed -i '$aread_rnd_buffer_size=2560M' /etc/my.cnf
-		echo "123456"|sudo -s sed -i '$asort_buffer_size=2560M' /etc/my.cnf
-		echo "123456"|sudo -s sed -i '$ajoin_buffer_size=2560M' /etc/my.cnf
-		echo "123456"|sudo -s sed -i '$ainnodb_buffer_pool_size=6G' /etc/my.cnf
-		echo "123456"|sudo -s sed -i '$aread_buffer_size=2560M' /etc/my.cnf
-		echo "123456"|sudo -s sed -i '$amyisam-recover=BACKUP' /etc/my.cnf
-		echo "123456"|sudo -s sed -i '$atmp_table_size=512M' /etc/my.cnf
-		echo "123456"|sudo -s sed -i '$amax_connections=1500' /etc/my.cnf
-		echo "123456"|sudo -s sed -i '$aquery_cache_limit=256M' /etc/my.cnf
-		echo "123456"|sudo -s sed -i '$aquery_cache_size=1024M' /etc/my.cnf
-		echo "123456"|sudo -s sed -i '$aexpire_logs_days=10' /etc/my.cnf
-		echo "123456"|sudo -s sed -i '$amax_binlog_size=100M' /etc/my.cnf
+		echo "123456"|sudo -S su - root -c "echo "[mysqld]" >> /etc/my.cnf"
+		echo "123456"|sudo -S sed -i '$adatadir=/var/lib/mysql' /etc/my.cnf
+		echo "123456"|sudo -S sed -i '$asocket=/var/lib/mysql/mysql.sock' /etc/my.cnf
+		echo "123456"|sudo -S sed -i '$auser=mysql' /etc/my.cnf
+		echo "123456"|sudo -S sed -i '$aport=3306' /etc/my.cnf
+		echo "123456"|sudo -S sed -i '$alower_case_table_names=1' /etc/my.cnf
+		echo "123456"|sudo -S sed -i '$acharacter-set-server=utf8' /etc/my.cnf
+		echo "123456"|sudo -S sed -i '$asymbolic-links=0' /etc/my.cnf
+		echo "123456"|sudo -S sed -i '$askip-name-resolve' /etc/my.cnf
+		echo "123456"|sudo -S sed -i '$anet_write_timeout=600' /etc/my.cnf
+		echo "123456"|sudo -S sed -i '$await_timeout=31536000' /etc/my.cnf
+		echo "123456"|sudo -S sed -i '$ainteractive_timeout=31536000' /etc/my.cnf
+		echo "123456"|sudo -S sed -i '$acollation-server=utf8_general_ci' /etc/my.cnf
+		echo "123456"|sudo -S sed -i '$askip-external-locking' /etc/my.cnf
+		echo "123456"|sudo -S sed -i '$akey_buffer=512M' /etc/my.cnf
+		echo "123456"|sudo -S sed -i '$amax_allowed_packet=16M' /etc/my.cnf
+		echo "123456"|sudo -S sed -i '$athread_stack=192K' /etc/my.cnf
+		echo "123456"|sudo -S sed -i '$athread_cache_size=8' /etc/my.cnf
+		echo "123456"|sudo -S sed -i '$aread_rnd_buffer_size=2560M' /etc/my.cnf
+		echo "123456"|sudo -S sed -i '$asort_buffer_size=2560M' /etc/my.cnf
+		echo "123456"|sudo -S sed -i '$ajoin_buffer_size=2560M' /etc/my.cnf
+		echo "123456"|sudo -S sed -i '$ainnodb_buffer_pool_size=6G' /etc/my.cnf
+		echo "123456"|sudo -S sed -i '$aread_buffer_size=2560M' /etc/my.cnf
+		echo "123456"|sudo -S sed -i '$amyisam-recover=BACKUP' /etc/my.cnf
+		echo "123456"|sudo -S sed -i '$atmp_table_size=512M' /etc/my.cnf
+		echo "123456"|sudo -S sed -i '$amax_connections=1500' /etc/my.cnf
+		echo "123456"|sudo -S sed -i '$aquery_cache_limit=256M' /etc/my.cnf
+		echo "123456"|sudo -S sed -i '$aquery_cache_size=1024M' /etc/my.cnf
+		echo "123456"|sudo -S sed -i '$aexpire_logs_days=10' /etc/my.cnf
+		echo "123456"|sudo -S sed -i '$amax_binlog_size=100M' /etc/my.cnf
 		
-		echo "123456"|sudo -s sed -i '$a[client]' /etc/my.cnf
-		echo "123456"|sudo -s sed -i '$aport=3306' /etc/my.cnf
-		echo "123456"|sudo -s sed -i '$adefault-character-set=utf8' /etc/my.cnf
+		echo "123456"|sudo -S sed -i '$a[client]' /etc/my.cnf
+		echo "123456"|sudo -S sed -i '$aport=3306' /etc/my.cnf
+		echo "123456"|sudo -S sed -i '$adefault-character-set=utf8' /etc/my.cnf
 
-		echo "123456"|sudo -s sed -i '$a[mysqld_safe]' /etc/my.cnf
-		echo "123456"|sudo -s sed -i '$alog-error=/var/log/mysqld.log' /etc/my.cnf
-		echo "123456"|sudo -s sed -i '$asocket=/var/lib/mysql/mysql.sock' /etc/my.cnf
-		echo "123456"|sudo -s sed -i '$apid-file=/var/lib/mysql/mysql.pid' /etc/my.cnf
-		echo "123456"|sudo -s sed -i '$anice=0' /etc/my.cnf
+		echo "123456"|sudo -S sed -i '$a[mysqld_safe]' /etc/my.cnf
+		echo "123456"|sudo -S sed -i '$alog-error=/var/log/mysqld.log' /etc/my.cnf
+		echo "123456"|sudo -S sed -i '$asocket=/var/lib/mysql/mysql.sock' /etc/my.cnf
+		echo "123456"|sudo -S sed -i '$apid-file=/var/lib/mysql/mysql.pid' /etc/my.cnf
+		echo "123456"|sudo -S sed -i '$anice=0' /etc/my.cnf
 
-		echo "123456"|sudo -s sed -i '$a[mysqldump]' /etc/my.cnf
-		echo "123456"|sudo -s sed -i '$aquick' /etc/my.cnf
-		echo "123456"|sudo -s sed -i '$aquote-names' /etc/my.cnf
-		echo "123456"|sudo -s sed -i '$amax_allowed_packet=1024M' /etc/my.cnf
+		echo "123456"|sudo -S sed -i '$a[mysqldump]' /etc/my.cnf
+		echo "123456"|sudo -S sed -i '$aquick' /etc/my.cnf
+		echo "123456"|sudo -S sed -i '$aquote-names' /etc/my.cnf
+		echo "123456"|sudo -S sed -i '$amax_allowed_packet=1024M' /etc/my.cnf
 
-		echo "123456"|sudo -s sed -i '$a[mysql]' /etc/my.cnf
-		echo "123456"|sudo -s sed -i '$a[isamchk]' /etc/my.cnf
-		echo "123456"|sudo -s sed -i '$akey_buffer=16M' /etc/my.cnf
-		echo "123456"|sudo -s chmod 644 /etc/my.cnf
+		echo "123456"|sudo -S sed -i '$a[mysql]' /etc/my.cnf
+		echo "123456"|sudo -S sed -i '$a[isamchk]' /etc/my.cnf
+		echo "123456"|sudo -S sed -i '$akey_buffer=16M' /etc/my.cnf
+		echo "123456"|sudo -S chmod 644 /etc/my.cnf
 
 		if [ $? -eq 0 ]; then
 			let count+=1
@@ -959,7 +959,7 @@ MySQLInstall(){
 		# 启动Mysql
 		echo -e "\033[32m正在启动 MySQL...\033[0m"
 		sleep 2
-		echo "123456"|sudo -s service mysql start
+		echo "123456"|sudo -S service mysql start
 	elif [ "$count" != 3 ]; then
 		echo -e "\033[31mMySQL --------------------------- [安装失败]\033[0m"
 		return
@@ -1052,8 +1052,8 @@ OracleInstall(){
 		fi
 	else
 		echo -e "\033[32mmcentos6.8_oracle11gPackages 已经存在\033[0m"
-		echo "123456"|sudo -s rpm -ivh --force --nodeps $all_packages_path/centos6.8_oracle11gPackages/part1/*.rpm 
-		echo "123456"|sudo -s rpm -ivh --force --nodeps $all_packages_path/centos6.8_oracle11gPackages/part2_xhost/*.rpm 
+		echo "123456"|sudo -S rpm -ivh --force --nodeps $all_packages_path/centos6.8_oracle11gPackages/part1/*.rpm 
+		echo "123456"|sudo -S rpm -ivh --force --nodeps $all_packages_path/centos6.8_oracle11gPackages/part2_xhost/*.rpm 
 	fi
 	
 	# 修改/etc/hosts
@@ -1064,20 +1064,20 @@ OracleInstall(){
 		then
 		echo -e "\033[32m/etc/sysctl.conf 环境变量已经存在\033[0m"
 	else
-		echo "123456"|sudo -s sed -i '$a# Oracle11gR2 kernel parameters' /etc/sysctl.conf
-		echo "123456"|sudo -s sed -i '$afs.aio-max-nr=1048576' /etc/sysctl.conf
-		echo "123456"|sudo -s sed -i '$afs.file-max=6815744' /etc/sysctl.conf
-		echo "123456"|sudo -s sed -i '$akernel.shmall = 2097152' /etc/sysctl.conf
-		echo "123456"|sudo -s sed -i '$akernel.shmmni = 4096' /etc/sysctl.conf
-		echo "123456"|sudo -s sed -i '$akernel.sem=250	32000	100	128' /etc/sysctl.conf
-		echo "123456"|sudo -s sed -i '$akernel.shmmax=2147483648' /etc/sysctl.conf
-		echo "123456"|sudo -s sed -i '$anet.ipv4.ip_local_port_range=9000 65500' /etc/sysctl.conf
-		echo "123456"|sudo -s sed -i '$anet.core.rmem_default=262144' /etc/sysctl.conf
-		echo "123456"|sudo -s sed -i '$anet.core.rmem_max=4194304' /etc/sysctl.conf
-		echo "123456"|sudo -s sed -i '$anet.core.wmem_default=262144' /etc/sysctl.conf
-		echo "123456"|sudo -s sed -i '$anet.core.wmem_max=1048586' /etc/sysctl.conf
+		echo "123456"|sudo -S sed -i '$a# Oracle11gR2 kernel parameters' /etc/sysctl.conf
+		echo "123456"|sudo -S sed -i '$afs.aio-max-nr=1048576' /etc/sysctl.conf
+		echo "123456"|sudo -S sed -i '$afs.file-max=6815744' /etc/sysctl.conf
+		echo "123456"|sudo -S sed -i '$akernel.shmall = 2097152' /etc/sysctl.conf
+		echo "123456"|sudo -S sed -i '$akernel.shmmni = 4096' /etc/sysctl.conf
+		echo "123456"|sudo -S sed -i '$akernel.sem=250	32000	100	128' /etc/sysctl.conf
+		echo "123456"|sudo -S sed -i '$akernel.shmmax=2147483648' /etc/sysctl.conf
+		echo "123456"|sudo -S sed -i '$anet.ipv4.ip_local_port_range=9000 65500' /etc/sysctl.conf
+		echo "123456"|sudo -S sed -i '$anet.core.rmem_default=262144' /etc/sysctl.conf
+		echo "123456"|sudo -S sed -i '$anet.core.rmem_max=4194304' /etc/sysctl.conf
+		echo "123456"|sudo -S sed -i '$anet.core.wmem_default=262144' /etc/sysctl.conf
+		echo "123456"|sudo -S sed -i '$anet.core.wmem_max=1048586' /etc/sysctl.conf
 		# 生效配置
-		echo "123456"|sudo -s su - root -c "sysctl -p"
+		echo "123456"|sudo -S su - root -c "sysctl -p"
 	fi
 	
 	# 配置用户资源限制文件 /etc/security/limits.conf
@@ -1085,12 +1085,12 @@ OracleInstall(){
 		then
 		echo -e "\033[32m/etc/security/limits.conf 环境变量已经存在\033[0m"
 	else
-		echo "123456"|sudo -s sed -i '$a# Oracle11gR2 shell limits' /etc/security/limits.conf
-		echo "123456"|sudo -s sed -i '$ayuantiaotech soft nproc 2048' /etc/security/limits.conf
-		echo "123456"|sudo -s sed -i '$ayuantiaotechhard nproc 16384' /etc/security/limits.conf
-		echo "123456"|sudo -s sed -i '$ayuantiaotechsoft nofile 1024' /etc/security/limits.conf
-		echo "123456"|sudo -s sed -i '$ayuantiaotechhard nofile 65536' /etc/security/limits.conf
-		echo "123456"|sudo -s sed -i '$ayuantiaotechsoft stack 10240' /etc/security/limits.conf
+		echo "123456"|sudo -S sed -i '$a# Oracle11gR2 shell limits' /etc/security/limits.conf
+		echo "123456"|sudo -S sed -i '$ayuantiaotech soft nproc 2048' /etc/security/limits.conf
+		echo "123456"|sudo -S sed -i '$ayuantiaotechhard nproc 16384' /etc/security/limits.conf
+		echo "123456"|sudo -S sed -i '$ayuantiaotechsoft nofile 1024' /etc/security/limits.conf
+		echo "123456"|sudo -S sed -i '$ayuantiaotechhard nofile 65536' /etc/security/limits.conf
+		echo "123456"|sudo -S sed -i '$ayuantiaotechsoft stack 10240' /etc/security/limits.conf
 	fi
 	
 
@@ -1099,107 +1099,107 @@ OracleInstall(){
 		then
 		echo -e "\033[32m/etc/sysctl.conf 环境变量已经存在\033[0m"
 	else
-		echo "123456"|sudo -s sed -i '$a# Oracle11gR2 shell limits' /etc/pam.d/login
-		echo "123456"|sudo -s sed -i '$asession required pam_limits.so' /etc/pam.d/login
+		echo "123456"|sudo -S sed -i '$a# Oracle11gR2 shell limits' /etc/pam.d/login
+		echo "123456"|sudo -S sed -i '$asession required pam_limits.so' /etc/pam.d/login
 	fi
 	if cat /etc/pam.d/su | grep Oracle11gR2 >/dev/null
 		then
 		echo -e "\033[32m/etc/sysctl.conf 环境变量已经存在\033[0m"
 	else
-		echo "123456"|sudo -s sed -i '$a# Oracle11gR2 shell limits' /etc/pam.d/su
-		echo "123456"|sudo -s sed -i '$asession required pam_limits.so' /etc/pam.d/su
+		echo "123456"|sudo -S sed -i '$a# Oracle11gR2 shell limits' /etc/pam.d/su
+		echo "123456"|sudo -S sed -i '$asession required pam_limits.so' /etc/pam.d/su
 	fi
 
 	# 创建/opt
 	if [ ! -d /opt/ ]; then
-	    echo "123456"|sudo -s su - root -c "mkdir /opt/"
+	    echo "123456"|sudo -S su - root -c "mkdir /opt/"
 	else
 	    echo -e "\033[32m/opt/ 路径已经存在\033[0m"
 	fi
-	echo "123456"|sudo -s chown -R yuantiaotech /opt/
-	echo "123456"|sudo -s chmod -R 775 /opt/
+	echo "123456"|sudo -S chown -R yuantiaotech /opt/
+	echo "123456"|sudo -S chmod -R 775 /opt/
 
 	# 配置/etc/profile环境变量
 	if cat /etc/profile | grep ORACLE_HOME >/dev/null
 		then
 		echo -e "\033[32m/etc/profile 环境变量已经存在\033[0m"
 	else
-		echo "123456"|sudo -s sed -i '$a# Oracle11gR2 shell limits' /etc/profile
-		echo "123456"|sudo -s sed -i '$aexport ORACLE_BASE=/opt/app/oracle' /etc/profile
-		echo "123456"|sudo -s sed -i '$aexport ORACLE_HOME=$ORACLE_BASE/product/11.2.0/dbhome_1' /etc/profile
-		echo "123456"|sudo -s sed -i '$aexport ORACLE_OWNER=yuantiaotech' /etc/profile
-		echo "123456"|sudo -s sed -i '$aexport ORACLE_SID=orcl' /etc/profile
-		echo "123456"|sudo -s sed -i '$aexport NLS_LANG=.AL32UTF8' /etc/profile
-		echo "123456"|sudo -s sed -i '$aexport PATH=$PATH:$ORACLE_HOME/bin' /etc/profile
+		echo "123456"|sudo -S sed -i '$a# Oracle11gR2 shell limits' /etc/profile
+		echo "123456"|sudo -S sed -i '$aexport ORACLE_BASE=/opt/app/oracle' /etc/profile
+		echo "123456"|sudo -S sed -i '$aexport ORACLE_HOME=$ORACLE_BASE/product/11.2.0/dbhome_1' /etc/profile
+		echo "123456"|sudo -S sed -i '$aexport ORACLE_OWNER=yuantiaotech' /etc/profile
+		echo "123456"|sudo -S sed -i '$aexport ORACLE_SID=orcl' /etc/profile
+		echo "123456"|sudo -S sed -i '$aexport NLS_LANG=.AL32UTF8' /etc/profile
+		echo "123456"|sudo -S sed -i '$aexport PATH=$PATH:$ORACLE_HOME/bin' /etc/profile
 		# 生效配置
 		source /etc/profile
 	fi
 	
 	# 建立库链接
 	if [ ! -d /usr/lib64 ]; then
-	    echo "123456"|sudo -s su - root -c "mkdir /usr/lib64"
+	    echo "123456"|sudo -S su - root -c "mkdir /usr/lib64"
 	else
 	    echo -e "\033[32m/usr/lib64 路径已经存在\033[0m"
 	fi
-	echo "123456"|sudo -s ln -s /etc /etc/rc.d
-	echo "123456"|sudo -s ln -s /usr/bin/awk /bin/awk
-	echo "123456"|sudo -s ln -s /usr/bin/basename /bin/basename
-	echo "123456"|sudo -s ln -s /usr/bin/rpm /bin/rpm
-	echo "123456"|sudo -s ln -s /lib/x86_64-linux-gnu/libgcc_s.so.1 /lib64/
-	echo "123456"|sudo -s ln -s /usr/lib/x86_64-linux-gnu/libc_nonshared.a /usr/lib64/
-	echo "123456"|sudo -s ln -s /usr/lib/x86_64-linux-gnu/libpthread_nonshared.a /usr/lib64/
-	echo "123456"|sudo -s ln -s /usr/lib/x86_64-linux-gnu/libstdc++.so.6 /usr/lib64/
+	echo "123456"|sudo -S ln -s /etc /etc/rc.d
+	echo "123456"|sudo -S ln -s /usr/bin/awk /bin/awk
+	echo "123456"|sudo -S ln -s /usr/bin/basename /bin/basename
+	echo "123456"|sudo -S ln -s /usr/bin/rpm /bin/rpm
+	echo "123456"|sudo -S ln -s /lib/x86_64-linux-gnu/libgcc_s.so.1 /lib64/
+	echo "123456"|sudo -S ln -s /usr/lib/x86_64-linux-gnu/libc_nonshared.a /usr/lib64/
+	echo "123456"|sudo -S ln -s /usr/lib/x86_64-linux-gnu/libpthread_nonshared.a /usr/lib64/
+	echo "123456"|sudo -S ln -s /usr/lib/x86_64-linux-gnu/libstdc++.so.6 /usr/lib64/
 
 	# 设置Linux版本
-	echo "123456"|sudo -s su - root -c "echo 'Red Hat Linux release 5' > /etc/redhat-release"
+	echo "123456"|sudo -S su - root -c "echo 'Red Hat Linux release 5' > /etc/redhat-release"
 
-	echo "123456"|sudo -s export LANG=en_US
+	echo "123456"|sudo -S export LANG=en_US
 
 	# 创建并且配置/etc/init.d/oracle 开机启动脚本
 	if [ ! -f /etc/init.d/oracle ]; then
-		echo "123456"|sudo -s su - root -c "echo '#! /bin/sh' >> /etc/init.d/oracle"
-		echo "123456"|sudo -s sed -i '$aexport ORACLE_BASE=/opt/app/oracle' /etc/init.d/oracle
-		echo "123456"|sudo -s sed -i '$aexport ORACLE_HOME=/opt/app/oracle/product/11.2.0/dbhome_1' /etc/init.d/oracle
-		echo "123456"|sudo -s sed -i '$aexport ORACLE_OWNER=yuantiaotech' /etc/init.d/oracle
-		echo "123456"|sudo -s sed -i '$aexport ORACLE_SID=orcl' /etc/init.d/oracle
-		echo "123456"|sudo -s sed -i '$aexport PATH=$PATH:$ORACLE_HOME/bin' /etc/init.d/oracle
-		echo "123456"|sudo -s sed -i '$aif [ ! -f $ORACLE_HOME/bin/dbstart -o ! -d $ORACLE_HOME ]' /etc/init.d/oracle
-		echo "123456"|sudo -s sed -i '$athen' /etc/init.d/oracle
-		echo "123456"|sudo -s sed -i '$aecho "Oracle startup: cannot start"' /etc/init.d/oracle
-		echo "123456"|sudo -s sed -i '$aexit 1' /etc/init.d/oracle
-		echo "123456"|sudo -s sed -i '$afi' /etc/init.d/oracle
-		echo "123456"|sudo -s sed -i '$acase "$1" in' /etc/init.d/oracle
-		echo "123456"|sudo -s sed -i '$astart)' /etc/init.d/oracle
-		echo "123456"|sudo -s sed -i '$a# Oracle listener and instance startup' /etc/init.d/oracle
-		echo "123456"|sudo -s sed -i '$aecho -n "Starting Oracle: "' /etc/init.d/oracle
-		echo "123456"|sudo -s sed -i '$asu - $ORACLE_OWNER -c "$ORACLE_HOME/bin/dbstart $ORACLE_HOME"' /etc/init.d/oracle
-		echo "123456"|sudo -s sed -i '$aecho "OK"' /etc/init.d/oracle
-		echo "123456"|sudo -s sed -i '$a;;' /etc/init.d/oracle
-		echo "123456"|sudo -s sed -i '$astop)' /etc/init.d/oracle
-		echo "123456"|sudo -s sed -i '$a# Oracle listener and instance shutdown' /etc/init.d/oracle
-		echo "123456"|sudo -s sed -i '$aecho -n "Shutdown Oracle: "' /etc/init.d/oracle
-		echo "123456"|sudo -s sed -i '$asu - $ORACLE_OWNER -c "$ORACLE_HOME/bin/dbshut $ORACLE_HOME"' /etc/init.d/oracle
-		echo "123456"|sudo -s sed -i '$aecho "OK"' /etc/init.d/oracle
-		echo "123456"|sudo -s sed -i '$a;; ' /etc/init.d/oracle
-		echo "123456"|sudo -s sed -i '$areload|restart)' /etc/init.d/oracle
-		echo "123456"|sudo -s sed -i '$a$0 stop' /etc/init.d/oracle
-		echo "123456"|sudo -s sed -i '$a$0 start' /etc/init.d/oracle
-		echo "123456"|sudo -s sed -i '$a;;' /etc/init.d/oracle
-		echo "123456"|sudo -s sed -i '$a*)' /etc/init.d/oracle
-		echo "123456"|sudo -s sed -i '$aecho "Usage: `basename $0` start|stop|restart|reload"' /etc/init.d/oracle
-		echo "123456"|sudo -s sed -i '$aexit 1' /etc/init.d/oracle
-		echo "123456"|sudo -s sed -i '$aesac' /etc/init.d/oracle
-		echo "123456"|sudo -s sed -i '$aexit 0' /etc/init.d/oracle
-		echo "123456"|sudo -s chmod 755 /etc/init.d/oracle
+		echo "123456"|sudo -S su - root -c "echo '#! /bin/sh' >> /etc/init.d/oracle"
+		echo "123456"|sudo -S sed -i '$aexport ORACLE_BASE=/opt/app/oracle' /etc/init.d/oracle
+		echo "123456"|sudo -S sed -i '$aexport ORACLE_HOME=/opt/app/oracle/product/11.2.0/dbhome_1' /etc/init.d/oracle
+		echo "123456"|sudo -S sed -i '$aexport ORACLE_OWNER=yuantiaotech' /etc/init.d/oracle
+		echo "123456"|sudo -S sed -i '$aexport ORACLE_SID=orcl' /etc/init.d/oracle
+		echo "123456"|sudo -S sed -i '$aexport PATH=$PATH:$ORACLE_HOME/bin' /etc/init.d/oracle
+		echo "123456"|sudo -S sed -i '$aif [ ! -f $ORACLE_HOME/bin/dbstart -o ! -d $ORACLE_HOME ]' /etc/init.d/oracle
+		echo "123456"|sudo -S sed -i '$athen' /etc/init.d/oracle
+		echo "123456"|sudo -S sed -i '$aecho "Oracle startup: cannot start"' /etc/init.d/oracle
+		echo "123456"|sudo -S sed -i '$aexit 1' /etc/init.d/oracle
+		echo "123456"|sudo -S sed -i '$afi' /etc/init.d/oracle
+		echo "123456"|sudo -S sed -i '$acase "$1" in' /etc/init.d/oracle
+		echo "123456"|sudo -S sed -i '$astart)' /etc/init.d/oracle
+		echo "123456"|sudo -S sed -i '$a# Oracle listener and instance startup' /etc/init.d/oracle
+		echo "123456"|sudo -S sed -i '$aecho -n "Starting Oracle: "' /etc/init.d/oracle
+		echo "123456"|sudo -S sed -i '$asu - $ORACLE_OWNER -c "$ORACLE_HOME/bin/dbstart $ORACLE_HOME"' /etc/init.d/oracle
+		echo "123456"|sudo -S sed -i '$aecho "OK"' /etc/init.d/oracle
+		echo "123456"|sudo -S sed -i '$a;;' /etc/init.d/oracle
+		echo "123456"|sudo -S sed -i '$astop)' /etc/init.d/oracle
+		echo "123456"|sudo -S sed -i '$a# Oracle listener and instance shutdown' /etc/init.d/oracle
+		echo "123456"|sudo -S sed -i '$aecho -n "Shutdown Oracle: "' /etc/init.d/oracle
+		echo "123456"|sudo -S sed -i '$asu - $ORACLE_OWNER -c "$ORACLE_HOME/bin/dbshut $ORACLE_HOME"' /etc/init.d/oracle
+		echo "123456"|sudo -S sed -i '$aecho "OK"' /etc/init.d/oracle
+		echo "123456"|sudo -S sed -i '$a;; ' /etc/init.d/oracle
+		echo "123456"|sudo -S sed -i '$areload|restart)' /etc/init.d/oracle
+		echo "123456"|sudo -S sed -i '$a$0 stop' /etc/init.d/oracle
+		echo "123456"|sudo -S sed -i '$a$0 start' /etc/init.d/oracle
+		echo "123456"|sudo -S sed -i '$a;;' /etc/init.d/oracle
+		echo "123456"|sudo -S sed -i '$a*)' /etc/init.d/oracle
+		echo "123456"|sudo -S sed -i '$aecho "Usage: `basename $0` start|stop|restart|reload"' /etc/init.d/oracle
+		echo "123456"|sudo -S sed -i '$aexit 1' /etc/init.d/oracle
+		echo "123456"|sudo -S sed -i '$aesac' /etc/init.d/oracle
+		echo "123456"|sudo -S sed -i '$aexit 0' /etc/init.d/oracle
+		echo "123456"|sudo -S chmod 755 /etc/init.d/oracle
 
 		#设置文件软链接
-		echo "123456"|sudo -s ln -s /etc/init.d/oracle /etc/rc.d/rc2.d/S99oracle
-		echo "123456"|sudo -s ln -s /etc/init.d/oracle /etc/rc.d/rc3.d/S99oracle
-		echo "123456"|sudo -s ln -s /etc/init.d/oracle /etc/rc.d/rc4.d/S99oracle
-		echo "123456"|sudo -s ln -s /etc/init.d/oracle /etc/rc.d/rc5.d/S99oracle
-		echo "123456"|sudo -s ln -s /etc/init.d/oracle /etc/rc.d/rc0.d/K01oracle
-		echo "123456"|sudo -s ln -s /etc/init.d/oracle /etc/rc.d/rc1.d/K01oracle
-		echo "123456"|sudo -s ln -s /etc/init.d/oracle /etc/rc.d/rc6.d/K01oracle
+		echo "123456"|sudo -S ln -s /etc/init.d/oracle /etc/rc.d/rc2.d/S99oracle
+		echo "123456"|sudo -S ln -s /etc/init.d/oracle /etc/rc.d/rc3.d/S99oracle
+		echo "123456"|sudo -S ln -s /etc/init.d/oracle /etc/rc.d/rc4.d/S99oracle
+		echo "123456"|sudo -S ln -s /etc/init.d/oracle /etc/rc.d/rc5.d/S99oracle
+		echo "123456"|sudo -S ln -s /etc/init.d/oracle /etc/rc.d/rc0.d/K01oracle
+		echo "123456"|sudo -S ln -s /etc/init.d/oracle /etc/rc.d/rc1.d/K01oracle
+		echo "123456"|sudo -S ln -s /etc/init.d/oracle /etc/rc.d/rc6.d/K01oracle
 		if [ $? -eq 0 ]; then
 			echo -e "\033[32m/etc/init.d/oracle 开机启动脚本创建成功\033[0m"
 		else
@@ -1257,7 +1257,7 @@ OracleConfigure(){
 		then
 		echo -e "\033[32m/etc/oratab 已经配置\033[0m"
 	else
-		echo "123456"|sudo -s sed -i "s/dbhome_1:N/dbhome_1:Y/g" /etc/oratab
+		echo "123456"|sudo -S sed -i "s/dbhome_1:N/dbhome_1:Y/g" /etc/oratab
 		if [ $? -eq 0 ]; then
 			echo -e "\033[32m/etc/oratab 配置成功\033[0m"
 			# 启动Oracle
@@ -1306,7 +1306,7 @@ OracleConfigure(){
 EOF
 
 	# 还原系统版本信息
-	echo "123456"|sudo -s su - root -c "echo 'CentOS release 6.8 (Final)' > /etc/redhat-release"
+	echo "123456"|sudo -S su - root -c "echo 'CentOS release 6.8 (Final)' > /etc/redhat-release"
 
 	if [ $? -eq 0 ]; then
 		echo -e "\033[32mOracle 配置成功\033[0m"
@@ -1345,13 +1345,13 @@ EOF
 
 	# 关闭Oralce监听
 	if [ -f /opt/app/oracle/product/11.2.0/dbhome_1/bin/lsnrctl ]; then	
-		echo "123456"|sudo -s su - root -c "lsnrctl stop"
+		echo "123456"|sudo -S su - root -c "lsnrctl stop"
 	fi
 	echo -e "\033[32m开始卸载Oracle\033[0m"
 	count=0
 	# 删除安装路径
-	echo "123456"|sudo -s su - root -c "rm -rf /opt/app"
-	echo "123456"|sudo -s su - root -c "rm -rf /opt/ORCLfmap"
+	echo "123456"|sudo -S su - root -c "rm -rf /opt/app"
+	echo "123456"|sudo -S su - root -c "rm -rf /opt/ORCLfmap"
 	if [ $? -eq 0 ]; then
 		let count+=1
 		echo -e "\033[32mOracle 安装路径删除成功\033[0m"
@@ -1360,9 +1360,9 @@ EOF
 	fi
 
 	# 删除/usr/local/bin下三个文件夹
-	echo "123456"|sudo -s su - root -c "rm -rf /usr/local/bin/dbhome"
-	echo "123456"|sudo -s su - root -c "rm -rf /usr/local/bin/oraenv"
-	echo "123456"|sudo -s su - root -c "rm -rf /usr/local/bin/coraenv"
+	echo "123456"|sudo -S su - root -c "rm -rf /usr/local/bin/dbhome"
+	echo "123456"|sudo -S su - root -c "rm -rf /usr/local/bin/oraenv"
+	echo "123456"|sudo -S su - root -c "rm -rf /usr/local/bin/coraenv"
 	if [ $? -eq 0 ]; then
 		echo -e "\033[32m/usr/local/bin 下配置文件夹删除成功\033[0m"
 		let count+=1
@@ -1371,8 +1371,8 @@ EOF
 	fi
 
 	# 删除/etc下文件
-	echo "123456"|sudo -s su - root -c "rm -f /etc/oratab"
-	echo "123456"|sudo -s su - root -c "rm -f /etc/oraInst.loc"
+	echo "123456"|sudo -S su - root -c "rm -f /etc/oratab"
+	echo "123456"|sudo -S su - root -c "rm -f /etc/oraInst.loc"
 	if [ $? -eq 0 ]; then
 		echo -e "\033[32m/etc/ 下配置文件夹删除成功\033[0m"
 		let count+=1
@@ -1383,18 +1383,18 @@ EOF
 	# 删除配置
 	if cat /etc/sysctl.conf | grep Oracle11gR2 >/dev/null
 		then
-		echo "123456"|sudo -s sed -i '/Oracle11gR2/d' /etc/sysctl.conf
-		echo "123456"|sudo -s sed -i '/fs.aio-max-nr/d' /etc/sysctl.conf
-		echo "123456"|sudo -s sed -i '/fs.file-max/d' /etc/sysctl.conf
-		echo "123456"|sudo -s sed -i '/kernel.shmall/d' /etc/sysctl.conf
-		echo "123456"|sudo -s sed -i '/kernel.shmmni/d' /etc/sysctl.conf
-		echo "123456"|sudo -s sed -i '/kernel.sem/d' /etc/sysctl.conf
-		echo "123456"|sudo -s sed -i '/kernel.shmmax/d' /etc/sysctl.conf
-		echo "123456"|sudo -s sed -i '/net.ipv4.ip_local_port_range/d' /etc/sysctl.conf
-		echo "123456"|sudo -s sed -i '/net.core.rmem_default/d' /etc/sysctl.conf
-		echo "123456"|sudo -s sed -i '/net.core.rmem_max/d' /etc/sysctl.conf
-		echo "123456"|sudo -s sed -i '/net.core.wmem_default/d' /etc/sysctl.conf
-		echo "123456"|sudo -s sed -i '/net.core.wmem_max/d' /etc/sysctl.conf
+		echo "123456"|sudo -S sed -i '/Oracle11gR2/d' /etc/sysctl.conf
+		echo "123456"|sudo -S sed -i '/fs.aio-max-nr/d' /etc/sysctl.conf
+		echo "123456"|sudo -S sed -i '/fs.file-max/d' /etc/sysctl.conf
+		echo "123456"|sudo -S sed -i '/kernel.shmall/d' /etc/sysctl.conf
+		echo "123456"|sudo -S sed -i '/kernel.shmmni/d' /etc/sysctl.conf
+		echo "123456"|sudo -S sed -i '/kernel.sem/d' /etc/sysctl.conf
+		echo "123456"|sudo -S sed -i '/kernel.shmmax/d' /etc/sysctl.conf
+		echo "123456"|sudo -S sed -i '/net.ipv4.ip_local_port_range/d' /etc/sysctl.conf
+		echo "123456"|sudo -S sed -i '/net.core.rmem_default/d' /etc/sysctl.conf
+		echo "123456"|sudo -S sed -i '/net.core.rmem_max/d' /etc/sysctl.conf
+		echo "123456"|sudo -S sed -i '/net.core.wmem_default/d' /etc/sysctl.conf
+		echo "123456"|sudo -S sed -i '/net.core.wmem_max/d' /etc/sysctl.conf
 		echo -e "\033[32m/etc/sysctl.conf 中Oracle配置删除成功\033[0m"
 	else
 		echo -e "\033[32m/etc/sysctl.conf 中Oracle配置不存在\033[0m"
@@ -1402,12 +1402,12 @@ EOF
 
 	if cat /etc/security/limits.conf | grep Oracle11gR2 >/dev/null
 		then
-		echo "123456"|sudo -s sed -i '/Oracle11gR2/d' /etc/security/limits.conf
-		echo "123456"|sudo -s sed -i '/yuantiaotech soft nproc 2048/d' /etc/security/limits.conf
-		echo "123456"|sudo -s sed -i '/yuantiaotechhard nproc 16384/d' /etc/security/limits.conf
-		echo "123456"|sudo -s sed -i '/yuantiaotechsoft nofile 1024/d' /etc/security/limits.conf
-		echo "123456"|sudo -s sed -i '/yuantiaotechhard nofile 65536/d' /etc/security/limits.conf
-		echo "123456"|sudo -s sed -i '/yuantiaotechsoft stack 10240/d' /etc/security/limits.conf
+		echo "123456"|sudo -S sed -i '/Oracle11gR2/d' /etc/security/limits.conf
+		echo "123456"|sudo -S sed -i '/yuantiaotech soft nproc 2048/d' /etc/security/limits.conf
+		echo "123456"|sudo -S sed -i '/yuantiaotechhard nproc 16384/d' /etc/security/limits.conf
+		echo "123456"|sudo -S sed -i '/yuantiaotechsoft nofile 1024/d' /etc/security/limits.conf
+		echo "123456"|sudo -S sed -i '/yuantiaotechhard nofile 65536/d' /etc/security/limits.conf
+		echo "123456"|sudo -S sed -i '/yuantiaotechsoft stack 10240/d' /etc/security/limits.conf
 		echo -e "\033[32m/etc/security/limits.conf 中Oracle配置删除成功\033[0m"
 	else
 		echo -e "\033[32m/etc/security/limits.conf 中Oracle配置不存在\033[0m"
@@ -1415,8 +1415,8 @@ EOF
 
 	if cat /etc/pam.d/su | grep Oracle11gR2 >/dev/null
 		then
-		echo "123456"|sudo -s sed -i '/Oracle11gR2/d' /etc/pam.d/su
-		echo "123456"|sudo -s sed -i '/session required pam_limits.so/d' /etc/pam.d/su
+		echo "123456"|sudo -S sed -i '/Oracle11gR2/d' /etc/pam.d/su
+		echo "123456"|sudo -S sed -i '/session required pam_limits.so/d' /etc/pam.d/su
 		echo -e "\033[32m/etc/pam.d/su 中Oracle配置删除成功\033[0m"
 	else
 		echo -e "\033[32m/etc/pam.d/su 中Oracle配置不存在\033[0m"
@@ -1424,8 +1424,8 @@ EOF
 
 	if cat /etc/pam.d/login | grep Oracle11gR2 >/dev/null
 		then
-		echo "123456"|sudo -s sed -i '/Oracle11gR2/d' /etc/pam.d/login
-		echo "123456"|sudo -s sed -i '/session required pam_limits.so/d' /etc/pam.d/login
+		echo "123456"|sudo -S sed -i '/Oracle11gR2/d' /etc/pam.d/login
+		echo "123456"|sudo -S sed -i '/session required pam_limits.so/d' /etc/pam.d/login
 		echo -e "\033[32m/etc/pam.d/login 中Oracle配置删除成功\033[0m"
 	else
 		echo -e "\033[32m/etc/pam.d/login 中Oracle配置不存在\033[0m"
@@ -1433,13 +1433,13 @@ EOF
 
 	if cat /etc/profile | grep Oracle11gR2 >/dev/null
 		then
-		echo "123456"|sudo -s sed -i '/Oracle11gR2/d' /etc/profile
-		echo "123456"|sudo -s sed -i '/export ORACLE_BASE/d' /etc/profile
-		echo "123456"|sudo -s sed -i '/export ORACLE_HOME/d' /etc/profile
-		echo "123456"|sudo -s sed -i '/export ORACLE_OWNER/d' /etc/profile
-		echo "123456"|sudo -s sed -i '/export ORACLE_SID/d' /etc/profile
-		echo "123456"|sudo -s sed -i '/export NLS_LANG=.AL32UTF8/d' /etc/profile
-		echo "123456"|sudo -s sed -i '/export PATH=\$PATH:\$ORACLE_HOME\/bin/d' /etc/profile
+		echo "123456"|sudo -S sed -i '/Oracle11gR2/d' /etc/profile
+		echo "123456"|sudo -S sed -i '/export ORACLE_BASE/d' /etc/profile
+		echo "123456"|sudo -S sed -i '/export ORACLE_HOME/d' /etc/profile
+		echo "123456"|sudo -S sed -i '/export ORACLE_OWNER/d' /etc/profile
+		echo "123456"|sudo -S sed -i '/export ORACLE_SID/d' /etc/profile
+		echo "123456"|sudo -S sed -i '/export NLS_LANG=.AL32UTF8/d' /etc/profile
+		echo "123456"|sudo -S sed -i '/export PATH=\$PATH:\$ORACLE_HOME\/bin/d' /etc/profile
 		echo -e "\033[32m/etc/profile 中Oracle配置删除成功\033[0m"
 	else
 		echo -e "\033[32m/etc/profile 中Oracle配置不存在\033[0m"
@@ -1455,18 +1455,18 @@ EOF
 #==================================================================== 关闭防火墙 ====================================================================
 closeFirewall(){
 	# 关闭防火墙
-	echo "123456"|sudo -s service iptables status
+	echo "123456"|sudo -S service iptables status
 	if [ $? -eq 0 ]; then
 		echo -e "\033[32m正在关闭防火墙...\033[0m"
 		sleep 1
-		echo "123456"|sudo -s service iptables stop
+		echo "123456"|sudo -S service iptables stop
 		if [ $? -eq 0 ]; then
 			echo -e "\033[32m临时关闭防火墙成功\033[0m"
 		else
 			echo -e "\033[31m临时关闭防火墙失败\033[0m"
 		fi
 
-		echo "123456"|sudo -s chkconfig iptables off
+		echo "123456"|sudo -S chkconfig iptables off
 		if [ $? -eq 0 ]; then
 			echo -e "\033[32m永久关闭防火墙成功，重启后生效\033[0m"
 		else
@@ -1483,7 +1483,7 @@ closeFirewall(){
 		echo -e "\033[32mSELINUX 已经关闭\033[0m"
 	else
 		echo -e "\033[32m正在关闭SELINUX...\033[0m"
-		echo "123456"|sudo -s sed -i "s/SELINUX=enforcing/SELINUX=disabled/g" /etc/selinux/config
+		echo "123456"|sudo -S sed -i "s/SELINUX=enforcing/SELINUX=disabled/g" /etc/selinux/config
 		if [ $? -eq 0 ]; then
 			echo -e "\033[32mSELINUX 关闭成功，重启服务器后生效\033[0m"
 		else
@@ -1525,12 +1525,12 @@ ActiveMQInstall(){
 	fi
 
 	# ActiveMQ内存限制
-	echo "123456"|sudo -s sed -i '2a ACTIVEMQ_OPTS_MEMORY=\"-Xms512m -Xmx1024m\"' $ActiveMQinstallPath/$ActiveMQFileName/bin/activemq
+	echo "123456"|sudo -S sed -i '2a ACTIVEMQ_OPTS_MEMORY=\"-Xms512m -Xmx1024m\"' $ActiveMQinstallPath/$ActiveMQFileName/bin/activemq
 	
 	# 配置脚本JAVA_HOME路径
-	echo "123456"|sudo -s ln -s $ActiveMQinstallPath/$ActiveMQFileName/bin/activemq /etc/init.d/
-	echo "123456"|sudo -s sed -i '2a export JAVA_HOME='$(echo $JAVA_HOME)'' /etc/init.d/activemq
-	echo "123456"|sudo -s sed -i '2a ACTIVEMQ_HOME='$(echo $ActiveMQinstallPath)'/'$(echo $ActiveMQFileName)'' /etc/init.d/activemq
+	echo "123456"|sudo -S ln -s $ActiveMQinstallPath/$ActiveMQFileName/bin/activemq /etc/init.d/
+	echo "123456"|sudo -S sed -i '2a export JAVA_HOME='$(echo $JAVA_HOME)'' /etc/init.d/activemq
+	echo "123456"|sudo -S sed -i '2a ACTIVEMQ_HOME='$(echo $ActiveMQinstallPath)'/'$(echo $ActiveMQFileName)'' /etc/init.d/activemq
 
 	if [ $? -eq 0 ]; then
 		echo -e "\033[32mactivemq 脚本配置成功\033[0m"
@@ -1539,10 +1539,10 @@ ActiveMQInstall(){
 		echo -e "\033[31mactivemq 脚本配置失败\033[0m"
 		return
 	fi
-	echo "123456"|sudo -s chmod 777 /etc/init.d/activemq
+	echo "123456"|sudo -S chmod 777 /etc/init.d/activemq
 
 	# 开机自启
-	echo "123456"|sudo -s chkconfig activemq on
+	echo "123456"|sudo -S chkconfig activemq on
 
 	if [ "$count" == 2 ]; then
 		echo -e "\033[32mActiveMQ --------------------------- [安装成功]\033[0m"
@@ -1579,7 +1579,7 @@ addHostName(){
 	then
 		echo -e "\033[32m/etc/hosts 已经添加主机名：$myHostName\033[0m"
 	else
-		echo "123456"|sudo -s sed -i '$a'$(echo $myIP)'    '$(echo $myHostName)'' /etc/hosts
+		echo "123456"|sudo -S sed -i '$a'$(echo $myIP)'    '$(echo $myHostName)'' /etc/hosts
 	fi
 }
 
