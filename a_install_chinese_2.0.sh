@@ -1245,6 +1245,8 @@ OracleInstall(){
     then
 		cd $all_packages_path/database
 		./runInstaller
+		# Oracle静默安装
+		#./runInstaller -silent -force -ignorePrereq -ignoreSysPrereqs -responseFile /tmp/db_install.rsp
 	else
 		echo -e "\033[31m当前为root用户，用非root用户重新执行脚本。\033[0m"
 		return
